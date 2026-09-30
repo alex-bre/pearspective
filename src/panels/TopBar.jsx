@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Undo2, Redo2, Upload, Download, ChevronDown, Sun, Moon } from 'lucide-react'
 import { useStore } from '../state/store'
+import { undo, redo } from '../state/history'
 import styles from './TopBar.module.css'
 
 /* The pear mark. Filled from theme tokens so it lifts in dark mode. */
@@ -23,6 +24,8 @@ const EXPORTS = [
 export default function TopBar() {
   const theme = useStore((s) => s.ui.theme)
   const toggleTheme = useStore((s) => s.toggleTheme)
+  const canUndo = useStore((s) => s.past.length > 0)
+  const canRedo = useStore((s) => s.future.length > 0)
   const [exportOpen, setExportOpen] = useState(false)
   const menuRef = useRef(null)
 
@@ -46,10 +49,10 @@ export default function TopBar() {
       </div>
 
       <div className={styles.group}>
-        <button className={styles.iconBtn} title="Undo (Ctrl+Z)" disabled>
+        <button className={styles.iconBtn} title="Undo (Ctrl+Z)" disabled={!canUndo} onClick={undo}>
           <Undo2 size={16} />
         </button>
-        <button className={styles.iconBtn} title="Redo (Ctrl+Shift+Z)" disabled>
+        <button className={styles.iconBtn} title="Redo (Ctrl+Shift+Z)" disabled={!canRedo} onClick={redo}>
           <Redo2 size={16} />
         </button>
       </div>

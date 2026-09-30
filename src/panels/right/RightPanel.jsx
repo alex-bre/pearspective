@@ -3,6 +3,7 @@ import { Tabs } from '../common/Controls'
 import GeneralTab from './tabs/GeneralTab'
 import ArrangeTab from './tabs/ArrangeTab'
 import ObjectsTab from './tabs/ObjectsTab'
+import StyleTab from './tabs/StyleTab'
 import styles from './RightPanel.module.css'
 
 const TABS = [
@@ -24,8 +25,7 @@ export default function RightPanel() {
       <div className={styles.content}>
         {tab === 'general' && <GeneralTab />}
         {tab === 'arrange' && (hasSelection ? <ArrangeTab /> : <NothingSelected />)}
-        {tab === 'style' &&
-          (hasSelection ? <p className={styles.empty}>Colour, finish and opacity arrive in phase 6.</p> : <NothingSelected />)}
+        {tab === 'style' && (hasSelection ? <StyleTab /> : <NothingSelected />)}
         {tab === 'objects' && <ObjectsTab />}
       </div>
     </aside>

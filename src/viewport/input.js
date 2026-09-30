@@ -1,4 +1,5 @@
 import { useStore } from '../state/store'
+import { beginHistoryBatch, endHistoryBatch } from '../state/history'
 import { snapValue, clampToPlayground } from '../model/snap'
 import { axesOf, handlePoint, resizeTo, worldBox } from '../model/transform'
 import { toUnit } from '../model/units'
@@ -21,7 +22,8 @@ const fmt = (m) => toUnit(m, store().settings.unit)
  *  - object : press an object to select it (Shift toggles); drag to move the
  *             selection along the ground (Select mode)
  *  - empty  : click clears the selection; drag orbits (OrbitControls)
- * Dropping a shape tile adds that shape where it lands. Returns a cleanup.
+ * A whole gesture is one undo step. Dropping a shape tile adds that shape
+ * where it lands. Returns a cleanup.
  */
 export function attachInput(host, engine) {
   const { canvas, controls, gizmo } = engine
@@ -44,6 +46,7 @@ export function attachInput(host, engine) {
     const handle = engine.pickHandle(e)
     if (handle) {
       controls.enabled = false
+      beginHistoryBatch()
       g = { kind: 'resize', ...at, ...startResize(e, handle) }
       return
     }
@@ -60,6 +63,7 @@ export function attachInput(host, engine) {
       return
     }
     if (!s.selection.includes(id)) s.select([id])
+    beginHistoryBatch() // selecting isn't a document change, so only a move gets recorded
     g = { kind: 'object', id, ...at, ...(s.ui.mode === 'select' ? startMove(e) : {}) }
   }
 
@@ -139,6 +143,7 @@ export function attachInput(host, engine) {
     if (g.kind === 'empty' && travelled(e) < CLICK_SLOP && !e.shiftKey) s.select([])
     // A plain click on one object of a multi-selection narrows it to that object.
     if (g.kind === 'object' && !g.moving && !g.shift && s.selection.length > 1) s.select([g.id])
+    endHistoryBatch()
     engine.clearGuides()
     engine.hideLabel()
     controls.enabled = true
@@ -159,6 +164,7 @@ export function attachInput(host, engine) {
 
   const onGizmoDragging = (e) => {
     controls.enabled = !e.value
+    e.value ? beginHistoryBatch() : endHistoryBatch()
     if (!e.value) engine.hideLabel()
   }
   const onGizmoChange = () => {

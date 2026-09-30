@@ -171,3 +171,43 @@
   color: var(--text-faint);
   pointer-events: none;
 }
+
+/* Colour control */
+.colorRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+.swatchWrap {
+  position: relative;
+  width: var(--control-h);
+  height: var(--control-h);
+  flex: none;
+}
+.swatch {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  border: 1px solid var(--border-strong);
+}
+/* The native picker sits invisibly over the swatch, so a click opens it. */
+.colorPicker {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  opacity: 0;
+  cursor: pointer;
+}
+.colorRow .input {
+  font-size: 12px;
+}
+
+.range {
+  flex: 1;
+  min-width: 0;
+}

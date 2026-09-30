@@ -57,6 +57,10 @@ export const useStore = create(
 
     selection: [],
 
+    // Undo/redo snapshots of `document`, managed by state/history.js.
+    past: [],
+    future: [],
+
     settings: {
       unit: 'm',
       grid: 0.5,
@@ -127,6 +131,11 @@ export const useStore = create(
         s.selection = []
       }),
     renameObject: (id, name) => set((s) => void (s.document.objects[id].name = name)),
+    /** Apply a style patch (color / finish / opacity) to every selected object. */
+    styleSelected: (patch) =>
+      set((s) => {
+        for (const id of s.selection) Object.assign(s.document.objects[id], patch)
+      }),
     /** Merge `patch` (position / size / rotation …) into an object, then settle it. */
     updateObject: (id, patch) =>
       set((s) => {

@@ -107,6 +107,61 @@ export function TextInput({ value, onChange }) {
   )
 }
 
+/* Colour control: a swatch that opens the native picker (live while dragging in
+   it), and a hex field that commits on Enter/blur. The # is optional; anything
+   that isn't six hex digits reverts. */
+export function ColorInput({ value, onChange }) {
+  const [hex, setHex] = useState(value)
+  useEffect(() => setHex(value), [value])
+
+  const commit = () => {
+    const v = '#' + hex.trim().replace(/^#/, '').toLowerCase()
+    if (/^#[0-9a-f]{6}$/.test(v) && v !== value) onChange(v)
+    else setHex(value)
+  }
+
+  return (
+    <div className={styles.colorRow}>
+      <span className={styles.swatchWrap}>
+        <span className={styles.swatch} style={{ background: value }} />
+        <input
+          className={styles.colorPicker}
+          type="color"
+          title="Pick a colour"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      </span>
+      <input
+        className={`${styles.input} mono`}
+        type="text"
+        spellCheck={false}
+        aria-label="Hex colour"
+        value={hex}
+        onChange={(e) => setHex(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && e.target.blur()}
+        onBlur={commit}
+      />
+    </div>
+  )
+}
+
+/* Slider. */
+export function Range({ value, onChange, min = 0, max = 1, step = 0.01, label }) {
+  return (
+    <input
+      className={styles.range}
+      type="range"
+      aria-label={label}
+      min={min}
+      max={max}
+      step={step}
+      value={value}
+      onChange={(e) => onChange(parseFloat(e.target.value))}
+    />
+  )
+}
+
 /* Small on/off switch. */
 export function Toggle({ checked, onChange, title, disabled }) {
   return (

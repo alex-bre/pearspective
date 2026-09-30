@@ -171,11 +171,13 @@ The app runs at the end of every phase.
     toggle and key 5.
   - Zoom −, %, + and Fit. Orbiting, panning or scrolling by hand leaves the
     named view.
-- [ ] **6. Style tab.**
+- [x] **6. Style tab.**
   - Swatches, colour picker with hex field, finish, opacity.
   - Changes apply to every selected object.
-- [ ] **7. Undo/redo.**
-  - lulogo `history.js`, with one batch per drag or handle gesture.
+- [x] **7. Undo/redo.**
+  - lulogo `history.js`, with one batch per drag, resize or gizmo turn.
+  - Continuous controls (opacity slider, colour picker) coalesce: changes with
+    the same key less than a second apart are one step.
   - Ctrl+Z, Ctrl+Shift+Z, Ctrl+Y, and the top-bar buttons.
 - [ ] **8. Boolean.**
   - Enabled when exactly 2 objects are selected; a hint shows which is A and

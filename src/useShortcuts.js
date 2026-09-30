@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useStore } from './state/store'
+import { undo, redo } from './state/history'
 
 const VIEW_KEYS = { 7: 'top', 1: 'front', 3: 'right', 0: 'home' }
 
@@ -15,6 +16,12 @@ export function useShortcuts() {
       else if ((key === 'delete' || key === 'backspace') && selection.length) {
         e.preventDefault()
         removeSelected()
+      } else if (mod && key === 'z') {
+        e.preventDefault()
+        e.shiftKey ? redo() : undo()
+      } else if (mod && key === 'y') {
+        e.preventDefault()
+        redo()
       } else if (mod && key === 'd') {
         e.preventDefault() // the browser's bookmark shortcut
         if (selection.length) duplicateSelected()
