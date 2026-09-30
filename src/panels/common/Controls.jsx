@@ -32,8 +32,9 @@ const display = (v) => (v == null || Number.isNaN(v) ? '' : String(Math.round(v 
 /**
  * Numeric input that commits on Enter/blur and nudges with the arrow keys
  * (Shift = ×10). A null value renders blank (e.g. mixed multi-selection).
+ * `prefix` is a short tag inside the left edge (an axis letter), `unit` one on the right.
  */
-export function NumberInput({ value, onChange, min, max, step = 1, unit, disabled, placeholder = '—', title }) {
+export function NumberInput({ value, onChange, min, max, step = 1, unit, prefix, prefixColor, disabled, placeholder = '—', title }) {
   const [text, setText] = useState(display(value))
   useEffect(() => setText(display(value)), [value])
 
@@ -51,6 +52,11 @@ export function NumberInput({ value, onChange, min, max, step = 1, unit, disable
 
   return (
     <span className={styles.numberWrap}>
+      {prefix && (
+        <span className={styles.prefix} style={{ color: prefixColor }}>
+          {prefix}
+        </span>
+      )}
       <input
         className={styles.input}
         type="text"
@@ -59,7 +65,7 @@ export function NumberInput({ value, onChange, min, max, step = 1, unit, disable
         disabled={disabled}
         placeholder={placeholder}
         title={title}
-        style={unit ? { paddingRight: 30 } : undefined}
+        style={{ paddingLeft: prefix ? 20 : undefined, paddingRight: unit ? 30 : undefined }}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {

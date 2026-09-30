@@ -22,6 +22,7 @@ const VIEWS = [
 /** The 3D viewport and its floating controls. */
 export default function Viewport() {
   const hostRef = useRef(null)
+  const labelRef = useRef(null)
   const mode = useStore((s) => s.ui.mode)
   const setMode = useStore((s) => s.setMode)
   const view = useStore((s) => s.ui.view)
@@ -29,7 +30,7 @@ export default function Viewport() {
 
   // The engine mirrors the store: synced once now, then on every change.
   useEffect(() => {
-    const engine = createEngine(hostRef.current)
+    const engine = createEngine(hostRef.current, labelRef.current)
     engine.sync(useStore.getState())
     const unsubscribe = useStore.subscribe(engine.sync)
     const detachInput = attachInput(hostRef.current, engine)
@@ -42,6 +43,8 @@ export default function Viewport() {
 
   return (
     <main ref={hostRef} className={styles.viewport}>
+      {/* Position / size / angle readout while dragging; placed by the engine. */}
+      <div ref={labelRef} className={`${styles.measure} mono`} />
       <div className={`${styles.floating} ${styles.modeBar} no-select`}>
         {MODES.map(({ id, label, title, Icon }) => (
           <button

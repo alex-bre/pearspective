@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
-import { createObject, freeSpot } from '../model/objects'
+import { createObject, duplicateObject, freeSpot } from '../model/objects'
+import { groundY } from '../model/transform'
+import { snapValue } from '../model/snap'
 
 /**
  * Where an explicit light/dark choice is remembered. Absent means "follow the
@@ -30,6 +32,12 @@ const initialPref = storedTheme()
 function selectIds(s, ids) {
   s.selection = ids
   if (ids.length && s.ui.rightTab === 'general') s.ui.rightTab = 'arrange'
+}
+
+// With snap to ground on, any change that could lift or sink an object (a
+// resize, a rotation, a typed Y) puts its lowest point back on the ground.
+function settle(s, o) {
+  if (s.settings.snapGround) o.position[1] = groundY(o)
 }
 
 /**
@@ -109,6 +117,48 @@ export const useStore = create(
         s.selection = []
       }),
     renameObject: (id, name) => set((s) => void (s.document.objects[id].name = name)),
+    /** Merge `patch` (position / size / rotation …) into an object, then settle it. */
+    updateObject: (id, patch) =>
+      set((s) => {
+        const o = s.document.objects[id]
+        Object.assign(o, patch)
+        settle(s, o)
+      }),
+    /** Shift objects from their drag-start positions: starts = [[id, [x, y, z]], …]. */
+    moveObjects: (starts, dx, dz) =>
+      set((s) => {
+        for (const [id, [x, y, z]] of starts) {
+          const o = s.document.objects[id]
+          if (o) o.position = [x + dx, y, z + dz]
+        }
+      }),
+    /** Put an object on the ground whether or not snap to ground is on. */
+    dropToGround: (id) =>
+      set((s) => {
+        const o = s.document.objects[id]
+        o.position[1] = groundY(o)
+      }),
+    centerObject: (id) =>
+      set((s) => {
+        const o = s.document.objects[id]
+        o.position = [0, o.position[1], 0]
+      }),
+    /** Copy the selection one width (plus a grid step) along X and select the copies. */
+    duplicateSelected: () => {
+      const { document: doc, selection, settings } = get()
+      const copies = selection.map((id) => {
+        const o = doc.objects[id]
+        const x = Math.min(o.position[0] + snapValue(o.size[0] + settings.grid, settings.grid), doc.playground.w / 2)
+        return duplicateObject(o, x - o.position[0])
+      })
+      set((s) => {
+        for (const c of copies) {
+          s.document.objects[c.id] = c
+          s.document.order.push(c.id)
+        }
+        selectIds(s, copies.map((c) => c.id))
+      })
+    },
 
     /* ---- selection ---- */
     select: (ids) => set((s) => selectIds(s, ids)),
@@ -119,7 +169,11 @@ export const useStore = create(
       ),
 
     /* ---- settings / playground ---- */
-    setSetting: (key, value) => set((s) => void (s.settings[key] = value)),
+    setSetting: (key, value) =>
+      set((s) => {
+        s.settings[key] = value
+        if (key === 'snapGround' && value) for (const id of s.document.order) settle(s, s.document.objects[id])
+      }),
     setPlayground: (key, value) => set((s) => void (s.document.playground[key] = value)),
   })),
 )

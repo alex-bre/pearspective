@@ -73,14 +73,14 @@ pearspective/
     model/
       units.js         m / cm / mm conversion for display
       objects.js       createObject, LABELS, SWATCHES, FINISH, freeSpot
-      geometry.js      unit primitives, mesh registry, normalizeGeometry, groundY
+      geometry.js      unit primitives, mesh registry, normalizeGeometry
+      transform.js     world boxes, groundY, resize handles and resizeTo
       snap.js          snapValue, clampToPlayground
       boolean.js       bake → three-bvh-csg → normalize (loaded on demand)
     viewport/
       Viewport.jsx     canvas host + overlays: mode bar, view panel, zoom bar, measure label
       engine.js        renderer, camera, orbit/transform controls, lights, ground/grid, sync, flyTo, fit
       input.js         pointer + drop input: picking, move drag, resize handles
-      guides.js        footprint / extension / alignment lines
     panels/
       TopBar.jsx       logo, undo/redo, Import, Export ▾, theme
       StatusBar.jsx    mode hint or progress message · object counts
@@ -140,7 +140,7 @@ The app runs at the end of every phase.
   - Orbit by dragging empty space, pan with right-drag, zoom with the wheel.
   - Selection box, Objects tab, and the right panel switches General → Arrange
     on select. The Arrange tab has the name field so far.
-- [ ] **3. Move and guides.**
+- [x] **3. Move and guides.**
   - Drag the selection along the ground: it snaps to the grid, stays inside
     the playground, and snaps to the ground (bottom of the box at y = 0, rotated
     objects included).
@@ -150,11 +150,12 @@ The app runs at the end of every phase.
     - a drop line when the object is lifted
     - alignment lines when an edge or centre matches another object
   - A floating position label and grab/grabbing cursors.
-- [ ] **4. Resize and rotate.**
+- [x] **4. Resize and rotate.**
   - Resize handles (decision 4) with grid snap and a live `W × D × H` label.
   - Rotate mode with 15° snap.
   - Arrange tab: name, position (Y locked while snap to ground is on), size,
     rotation, and Drop to ground / Center / Duplicate / Delete.
+  - Shortcuts: V / R switch mode, Ctrl+D duplicates.
 - [ ] **5. Camera.**
   - View panel: Top / Front / Right / Bottom / Back / Left / Perspective, each
     with a short animated move. Keys 7 / 1 / 3 / 0.
@@ -180,16 +181,16 @@ The app runs at the end of every phase.
     - STL: binary, mm, Z-up.
     - GLB: with colours, in meters.
 - [ ] **10. Tests and polish.**
-  - Model tests: snap and clamp, groundY on a rotated cube, cube − cube
-    bounding box, normalize.
+  - Model tests: cube − cube bounding box, normalize. (Snap, clamp, free spot,
+    groundY and resize are covered already.)
   - IO test: STL round trip.
-  - Shortcuts: V / R, Ctrl+D.
 
 ## Deferred (not requested; add when needed)
 
 - **Autosave.** Mesh geometry would need to be serialized, and stored in
   IndexedDB, since STL imports quickly exceed localStorage's 5 MB.
 - **Orthographic camera for the axis views.** The reference uses perspective.
+- **Resizing several objects at once.** Handles appear for a single selection.
 - **Snapping objects to each other** (lulogo `objectSnap.js`). Alignment guides
   show exact matches only.
 - **Source link / About dialog.** AGPL §13 requires offering the source to

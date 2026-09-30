@@ -128,3 +128,19 @@
   background: transparent;
   font-size: 12px;
 }
+
+/* Drag readout, positioned by the engine above the objects being changed. */
+.measure {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 3;
+  display: none;
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 11px;
+  white-space: pre;
+  pointer-events: none;
+}

@@ -42,6 +42,13 @@ export function createObject(type, x, z) {
   }
 }
 
+/** A copy of `obj` under a fresh id, shifted `dx` along X. */
+export function duplicateObject(obj, dx) {
+  seq++
+  const [x, y, z] = obj.position
+  return { ...obj, id: `o${seq}`, name: `${obj.name} copy`, position: [x + dx, y, z] }
+}
+
 /**
  * The spot nearest the origin, on grid-aligned rings, where a `size`-wide shape
  * fits inside the playground without touching any footprint. Falls back to the
