@@ -1,0 +1,108 @@
+.topbar {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  min-width: 0;
+  position: relative;
+  z-index: 5;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+.wordmark {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+}
+.pear {
+  color: var(--accent);
+}
+
+.group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.iconBtn,
+.btn {
+  height: var(--btn-h);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel-2);
+}
+.iconBtn {
+  width: var(--btn-h);
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+}
+.menuBtn {
+  padding-right: 10px;
+}
+.iconBtn:hover:not(:disabled),
+.btn:hover {
+  background: var(--hover);
+}
+.iconBtn:disabled {
+  opacity: 0.45;
+}
+
+.menuWrap {
+  position: relative;
+}
+.menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 230px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-panel);
+  z-index: 20;
+}
+.menuItem {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  text-align: left;
+}
+.menuItem:hover {
+  background: var(--hover);
+}
+.menuLabel {
+  font-weight: 500;
+}
+.menuSub {
+  font-size: 11px;
+  color: var(--text-muted);
+}

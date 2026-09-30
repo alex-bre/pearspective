@@ -1,0 +1,37 @@
+import { useStore } from '../../state/store'
+import { Tabs } from '../common/Controls'
+import GeneralTab from './tabs/GeneralTab'
+import styles from './RightPanel.module.css'
+
+const TABS = [
+  { id: 'general', label: 'General' },
+  { id: 'arrange', label: 'Arrange' },
+  { id: 'style', label: 'Style' },
+  { id: 'objects', label: 'Objects' },
+]
+
+/** Right properties panel. */
+export default function RightPanel() {
+  const tab = useStore((s) => s.ui.rightTab)
+  const setTab = useStore((s) => s.setRightTab)
+
+  return (
+    <aside className={`${styles.panel} no-select`}>
+      <Tabs tabs={TABS} active={tab} onChange={setTab} />
+      <div className={styles.content}>
+        {tab === 'general' && <GeneralTab />}
+        {(tab === 'arrange' || tab === 'style') && <NothingSelected />}
+        {tab === 'objects' && <p className={styles.empty}>The scene is empty.</p>}
+      </div>
+    </aside>
+  )
+}
+
+function NothingSelected() {
+  return (
+    <div className={styles.nothing}>
+      <span className={styles.nothingTitle}>Nothing selected</span>
+      <span className={styles.nothingText}>Click an object in the viewport or pick one from the Objects tab.</span>
+    </div>
+  )
+}

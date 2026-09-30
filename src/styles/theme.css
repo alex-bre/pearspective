@@ -1,0 +1,65 @@
+/*
+ * Theme tokens (from design-reference/Pearspective.dc.html). Editor chrome
+ * reads these; scene objects keep their own colours regardless of theme.
+ */
+:root,
+[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: #f4f3ee;
+  --panel: #ffffff;
+  --panel-2: #fafaf6;
+  --border: #e4e2d9;
+  --border-strong: #d2cfc3;
+  --text: #1c1d17;
+  --text-muted: #686a5d;
+  --text-faint: #9b9c8f;
+  --accent: #5f7d17;
+  --accent-hover: #506a12;
+  --accent-contrast: #ffffff;
+  --accent-soft: #eef3da;
+  --hover: #f1f3e8;
+  --active: #e5ead2;
+  --danger: #b8392b;
+
+  --canvas-bg: #e9e8e0;
+  --pear: #a9c43f;
+  --leaf: #5f7d2b;
+
+  /* Axis colours: X red, Y green, Z blue. */
+  --x: #c8553d;
+  --y: #5f8f2a;
+  --z: #3d6fb0;
+
+  --shadow-panel: 0 1px 2px rgba(40, 42, 30, 0.06), 0 2px 6px rgba(40, 42, 30, 0.08);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: #161713;
+  --panel: #1e1f1a;
+  --panel-2: #25261f;
+  --border: #32342b;
+  --border-strong: #43463a;
+  --text: #eaeae2;
+  --text-muted: #a3a597;
+  --text-faint: #6e7064;
+  --accent: #b3cd4c;
+  --accent-hover: #c6df62;
+  --accent-contrast: #161713;
+  --accent-soft: #333b18;
+  --hover: #2a2c23;
+  --active: #343829;
+  --danger: #f0776a;
+
+  --canvas-bg: #23241e;
+  --pear: #b3cd4c;
+  --leaf: #7d9c36;
+
+  --x: #e0735c;
+  --y: #95c24a;
+  --z: #6d9be0;
+
+  --shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.35);
+}

@@ -1,0 +1,17 @@
+.app {
+  display: grid;
+  /* minmax(0, 1fr) so the viewport column can shrink instead of pushing the
+     right panel off-screen. */
+  grid-template-columns: var(--left-w) minmax(0, 1fr) var(--right-w);
+  grid-template-rows: var(--top-h) minmax(0, 1fr) var(--status-h);
+  grid-template-areas:
+    'top top top'
+    'left center right'
+    'status status status';
+  height: 100vh;
+  height: 100dvh;
+  width: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+}

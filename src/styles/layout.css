@@ -1,0 +1,30 @@
+/*
+ * Layout scale tokens. Side panels are fluid between a comfortable width and
+ * the narrowest width their controls still fit in.
+ */
+:root {
+  --top-h: 48px;
+  --status-h: 28px;
+  --left-w: clamp(200px, 17vw, 248px);
+  --right-w: clamp(240px, 20vw, 288px);
+
+  --control-h: 28px;
+  --btn-h: 30px;
+  --field-label-w: 64px;
+  --panel-pad-x: 12px;
+}
+
+@media (max-width: 1200px) {
+  :root {
+    --field-label-w: 56px;
+    --panel-pad-x: 10px;
+  }
+}
+
+@media (max-height: 760px) {
+  :root {
+    --top-h: 42px;
+    --control-h: 26px;
+    --btn-h: 28px;
+  }
+}
