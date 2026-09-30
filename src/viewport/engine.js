@@ -12,18 +12,38 @@ const SCENE_COLORS = {
   dark: { bg: 0x23241e, ground: 0x2a2b24, grid: 0x34362d, gridStrong: 0x464a3c, edge: 0x5d604f, guide: 0xeea04f, align: 0xb3cd4c, sel: 0xb3cd4c, ax: 0xe0735c, az: 0x6d9be0 },
 }
 
-const HOME_DIR = new THREE.Vector3(0.62, 0.55, 0.78).normalize()
+// Where the camera looks from, per named view. Top and bottom lean a hair toward
+// +Z so the orbit controls keep a defined "up" (screen-up is then −Z, north).
+const VIEW_DIRS = Object.fromEntries(
+  Object.entries({
+    home: [0.62, 0.55, 0.78],
+    top: [0, 1, 1e-4],
+    bottom: [0, -1, 1e-4],
+    front: [0, 0, 1],
+    back: [0, 0, -1],
+    right: [1, 0, 0],
+    left: [-1, 0, 0],
+  }).map(([k, v]) => [k, new THREE.Vector3(...v).normalize()]),
+)
+const FOV = 38
+const TWEEN_MS = 450
 const DEG = Math.PI / 180
 const HANDLE_PX = 9 // on-screen size of a resize handle
 const ALIGN_EPS = 1e-4 // m — edges this close count as aligned
 const _v = new THREE.Vector3()
+const _up = new THREE.Vector3()
 
 /**
  * The three.js side of the viewport. It owns no editor state: `sync(state)`
  * makes the scene match the store, and everything else reads the scene or
  * draws transient feedback (guides, label) for the input layer.
+ *
+ * Two cameras share one orbit: perspective and orthographic. "Zoom level" is
+ * what they have in common — 1 is the home framing — so switching keeps the
+ * view the same size. `label` is the readout element; `onZoom(percent)` hears
+ * zoom changes.
  */
-export function createEngine(host, label) {
+export function createEngine(host, { label, onZoom }) {
   const renderer = new THREE.WebGLRenderer({ antialias: true })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
   renderer.shadowMap.enabled = true
@@ -33,11 +53,14 @@ export function createEngine(host, label) {
   host.prepend(canvas)
 
   const scene = new THREE.Scene()
-  const camera = new THREE.PerspectiveCamera(38, 1, 0.01, 1000)
+  const persp = new THREE.PerspectiveCamera(FOV, 1, 0.01, 1000)
+  const ortho = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1000)
+  let camera = persp // the active one
   const controls = new OrbitControls(camera, canvas)
   controls.enableDamping = true
   controls.dampingFactor = 0.14
   controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN }
+  controls.addEventListener('start', () => (tween = null)) // the user takes over mid-flight
 
   // Rotate mode's rings. The input layer listens to its events.
   const gizmo = new TransformControls(camera, canvas)
@@ -80,9 +103,12 @@ export function createEngine(host, label) {
   const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
   let envKey = ''
   let framed = false
+  let lastView = null
   let colors = SCENE_COLORS.light
   let playground = { w: 10, d: 10 }
   let labelIds = null
+  let tween = null
+  let lastZoom = null
 
   /* ---- environment ---- */
 
@@ -140,17 +166,85 @@ export function createEngine(host, label) {
     fill.position.set(-S, 0.6 * S, -0.6 * S)
     Object.assign(sun.shadow.camera, { left: -1.6 * S, right: 1.6 * S, top: 1.6 * S, bottom: -1.6 * S, near: 0.05 * S, far: 4.5 * S })
     sun.shadow.camera.updateProjectionMatrix()
-    camera.near = S / 500
-    camera.far = S * 50
-    camera.updateProjectionMatrix()
+    persp.near = S / 500
+    persp.far = S * 50
+    persp.updateProjectionMatrix()
+    updateOrtho()
 
     outlineMat.color.set(C.sel)
   }
 
-  function frameHome() {
-    camera.position.copy(HOME_DIR).multiplyScalar(Math.max(playground.w, playground.d) * 1.95)
-    controls.target.set(0, 0, 0)
+  /* ---- camera ---- */
+
+  const homeDist = () => Math.max(playground.w, playground.d) * 1.95
+  // An orthographic camera only has to stand clear of the scene; its distance doesn't change the picture.
+  const orthoBack = () => Math.max(playground.w, playground.d) * 10
+
+  // At zoom 1 the orthographic frustum shows what the perspective camera shows at home distance.
+  function updateOrtho() {
+    const hb = homeDist() * Math.tan((FOV / 2) * DEG)
+    Object.assign(ortho, { left: -hb * persp.aspect, right: hb * persp.aspect, top: hb, bottom: -hb, near: 0, far: orthoBack() * 2 })
+    ortho.updateProjectionMatrix()
+  }
+
+  /** 1 is the home framing; bigger is closer. */
+  const zoomLevel = () => (camera === ortho ? ortho.zoom : homeDist() / camera.position.distanceTo(controls.target))
+  const lookDir = () => camera.position.clone().sub(controls.target).normalize()
+
+  /** Put the active camera at `dir` from `target`, at zoom level `zoom`. */
+  function place(target, dir, zoom) {
+    controls.target.copy(target)
+    if (camera === ortho) {
+      ortho.position.copy(target).addScaledVector(dir, orthoBack())
+      ortho.zoom = zoom
+      ortho.updateProjectionMatrix()
+    } else {
+      persp.position.copy(target).addScaledVector(dir, homeDist() / zoom)
+    }
     controls.update()
+  }
+
+  function setProjection(projection) {
+    const next = projection === 'orthographic' ? ortho : persp
+    if (next === camera) return
+    const [target, dir, zoom] = [controls.target.clone(), lookDir(), zoomLevel()]
+    camera = next
+    controls.object = camera
+    gizmo.camera = camera
+    place(target, dir, zoom)
+  }
+
+  /** Glide to a framing: the direction turns along the sphere, zoom scales evenly. */
+  function flyTo(target, dir, zoom) {
+    const d0 = lookDir()
+    tween = {
+      t0: controls.target.clone(),
+      t1: target.clone(),
+      d0,
+      turn: new THREE.Quaternion().setFromUnitVectors(d0, dir),
+      z0: zoomLevel(),
+      z1: zoom,
+      start: performance.now(),
+    }
+  }
+  function stepTween() {
+    const k = Math.min(1, (performance.now() - tween.start) / TWEEN_MS)
+    const e = 1 - (1 - k) ** 3 // ease out
+    const dir = tween.d0.clone().applyQuaternion(new THREE.Quaternion().slerp(tween.turn, e))
+    place(tween.t0.clone().lerp(tween.t1, e), dir, tween.z0 * (tween.z1 / tween.z0) ** e)
+    if (k === 1) tween = null
+  }
+
+  const zoomBy = (factor) => flyTo(controls.target, lookDir(), zoomLevel() * factor)
+
+  /** Frame the playground and every object, keeping the current direction. */
+  function fit() {
+    const { w: W, d: D } = playground
+    const box = new THREE.Box3(new THREE.Vector3(-W / 2, 0, -D / 2), new THREE.Vector3(W / 2, 0, D / 2))
+    for (const mesh of meshes.values()) box.union(boxOf(mesh))
+    const sphere = box.getBoundingSphere(new THREE.Sphere())
+    const half = Math.atan(Math.tan((FOV / 2) * DEG) * Math.min(1, persp.aspect)) // the narrower half-angle
+    flyTo(sphere.center, lookDir(), homeDist() / ((sphere.radius / Math.sin(half)) * 1.05))
   }
 
   /* ---- store → scene ---- */
@@ -164,8 +258,16 @@ export function createEngine(host, label) {
       buildEnv(settings)
       if (!framed) {
         framed = true
-        frameHome()
+        lastView = ui.view
+        place(new THREE.Vector3(), VIEW_DIRS.home, 1)
       }
+    }
+
+    // Projection first, so a view change glides in the camera it ends in.
+    setProjection(ui.projection)
+    if (ui.view !== lastView) {
+      lastView = ui.view
+      if (ui.view) flyTo(new THREE.Vector3(), VIEW_DIRS[ui.view], 1)
     }
 
     for (const [id, mesh] of meshes) {
@@ -249,7 +351,10 @@ export function createEngine(host, label) {
   function pickHandle(e) {
     if (!handles.visible) return null
     aim(e)
-    const hit = raycaster.intersectObjects(handles.children, false)[0]
+    const hit = raycaster.intersectObjects(
+      handles.children.filter((h) => h.visible),
+      false,
+    )[0]
     return hit ? hit.object.userData.handle : null
   }
 
@@ -362,8 +467,9 @@ export function createEngine(host, label) {
     const w = host.clientWidth
     const h = Math.max(host.clientHeight, 1)
     renderer.setSize(w, h, false)
-    camera.aspect = w / h
-    camera.updateProjectionMatrix()
+    persp.aspect = w / h
+    persp.updateProjectionMatrix()
+    updateOrtho()
   }
   const ro = new ResizeObserver(resize)
   ro.observe(host)
@@ -372,13 +478,27 @@ export function createEngine(host, label) {
   let raf
   const loop = () => {
     raf = requestAnimationFrame(loop)
+    if (tween) stepTween()
     controls.update()
-    // Handles keep a constant size on screen, whatever the zoom.
+    // Handles keep a constant size on screen, whatever the zoom or projection.
+    // One whose drag plane is edge-on to the view can't be dragged, so it hides:
+    // the top handle when looking along the object's up axis, the corners when
+    // looking across its base.
     if (handles.visible) {
-      const k = (2 * Math.tan((camera.fov * DEG) / 2) * HANDLE_PX) / Math.max(canvas.clientHeight, 1)
-      for (const h of handles.children) h.scale.setScalar(h.getWorldPosition(_v).distanceTo(camera.position) * k)
+      const px = HANDLE_PX / Math.max(canvas.clientHeight, 1)
+      const along = Math.abs(camera.getWorldDirection(_v).dot(_up.set(0, 1, 0).applyQuaternion(handles.quaternion)))
+      for (const h of handles.children) {
+        h.visible = h.userData.handle.dir[1] ? along < 0.98 : along > 0.05
+        const span = camera === ortho ? (ortho.top - ortho.bottom) / ortho.zoom : 2 * Math.tan((FOV / 2) * DEG) * h.getWorldPosition(_v).distanceTo(persp.position)
+        h.scale.setScalar(span * px)
+      }
     }
     if (labelIds) placeLabel()
+    const zoom = Math.round(zoomLevel() * 100)
+    if (zoom !== lastZoom) {
+      lastZoom = zoom
+      onZoom?.(zoom)
+    }
     renderer.render(scene, camera)
   }
   loop()
@@ -412,6 +532,8 @@ export function createEngine(host, label) {
     clearGuides,
     showLabel,
     hideLabel,
+    zoomBy,
+    fit,
     dispose,
   }
 }

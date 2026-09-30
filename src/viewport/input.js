@@ -189,6 +189,9 @@ export function attachInput(host, engine) {
   // Right-drag pans; keep the browser menu out of the way.
   const onMenu = (e) => e.target === canvas && e.preventDefault()
 
+  // Orbiting, panning or zooming by hand leaves the named view.
+  const onCameraStart = () => store().ui.view && store().setView(null)
+
   host.addEventListener('pointerdown', onDown, true)
   host.addEventListener('dragover', onDragOver)
   host.addEventListener('drop', onDrop)
@@ -198,8 +201,10 @@ export function attachInput(host, engine) {
   window.addEventListener('pointercancel', onUp)
   gizmo.addEventListener('dragging-changed', onGizmoDragging)
   gizmo.addEventListener('objectChange', onGizmoChange)
+  controls.addEventListener('start', onCameraStart)
 
   return () => {
+    controls.removeEventListener('start', onCameraStart)
     host.removeEventListener('pointerdown', onDown, true)
     host.removeEventListener('dragover', onDragOver)
     host.removeEventListener('drop', onDrop)

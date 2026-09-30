@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { MousePointer2, RotateCw, Box, Minus, Plus } from 'lucide-react'
 import { useStore } from '../state/store'
 import { createEngine } from './engine'
@@ -10,6 +10,7 @@ const MODES = [
   { id: 'rotate', label: 'Rotate', title: 'Rotate (R)', Icon: RotateCw },
 ]
 
+// Axis views look straight along an axis, orthographically.
 const VIEWS = [
   { id: 'top', label: 'Top', title: 'Top (7)' },
   { id: 'front', label: 'Front', title: 'Front (1)' },
@@ -19,18 +20,28 @@ const VIEWS = [
   { id: 'left', label: 'Left', title: 'Left' },
 ]
 
+const PROJECTIONS = [
+  { id: 'perspective', label: 'Persp', title: 'Perspective (5 toggles)' },
+  { id: 'orthographic', label: 'Ortho', title: 'Orthographic (5 toggles)' },
+]
+
 /** The 3D viewport and its floating controls. */
 export default function Viewport() {
   const hostRef = useRef(null)
   const labelRef = useRef(null)
+  const engineRef = useRef(null) // for one-off camera commands: zoom and fit
+  const [zoom, setZoom] = useState(100)
   const mode = useStore((s) => s.ui.mode)
   const setMode = useStore((s) => s.setMode)
   const view = useStore((s) => s.ui.view)
   const setView = useStore((s) => s.setView)
+  const projection = useStore((s) => s.ui.projection)
+  const setProjection = useStore((s) => s.setProjection)
 
   // The engine mirrors the store: synced once now, then on every change.
   useEffect(() => {
-    const engine = createEngine(hostRef.current, labelRef.current)
+    const engine = createEngine(hostRef.current, { label: labelRef.current, onZoom: setZoom })
+    engineRef.current = engine
     engine.sync(useStore.getState())
     const unsubscribe = useStore.subscribe(engine.sync)
     const detachInput = attachInput(hostRef.current, engine)
@@ -38,6 +49,7 @@ export default function Viewport() {
       detachInput()
       unsubscribe()
       engine.dispose()
+      engineRef.current = null
     }
   }, [])
 
@@ -78,23 +90,36 @@ export default function Viewport() {
         <button
           className={`${styles.viewBtn} ${styles.homeBtn}`}
           data-active={view === 'home' || undefined}
-          title="Perspective (0)"
+          title="Home view, perspective (0)"
           onClick={() => setView('home')}
         >
           <Box size={13} />
-          Perspective
+          Home
         </button>
+        <div className={styles.projRow}>
+          {PROJECTIONS.map((p) => (
+            <button
+              key={p.id}
+              className={styles.viewBtn}
+              data-active={projection === p.id || undefined}
+              title={p.title}
+              onClick={() => setProjection(p.id)}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className={`${styles.floating} ${styles.zoomBar} no-select`}>
-        <button className={styles.zoomBtn} title="Zoom out">
+        <button className={styles.zoomBtn} title="Zoom out" onClick={() => engineRef.current?.zoomBy(0.8)}>
           <Minus size={14} />
         </button>
-        <span className={`${styles.zoomLabel} mono`}>100%</span>
-        <button className={styles.zoomBtn} title="Zoom in">
+        <span className={`${styles.zoomLabel} mono`}>{zoom}%</span>
+        <button className={styles.zoomBtn} title="Zoom in" onClick={() => engineRef.current?.zoomBy(1.25)}>
           <Plus size={14} />
         </button>
-        <button className={styles.fitBtn} title="Fit scene to view">
+        <button className={styles.fitBtn} title="Fit scene to view" onClick={() => engineRef.current?.fit()}>
           Fit
         </button>
       </div>

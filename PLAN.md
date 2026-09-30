@@ -54,6 +54,14 @@ works almost unchanged.
      exported in **mm**, Z-up, and imported as mm.
    - Defaults: a 10 × 10 m playground, a 0.5 m grid, and 1 m shapes.
 6. **Licence: AGPL-3.0-only**, like lulogo.
+7. **Two cameras, one orbit.**
+   - Axis views (Top / Front / Right / Bottom / Back / Left) are
+     **orthographic**; Home is the default 3/4 view in **perspective**.
+   - A Persp | Ortho toggle (key 5) switches projection in place. "Zoom level"
+     (1 = the home framing) is shared by both cameras, so a switch keeps the
+     view the same size.
+   - A resize handle whose drag plane is edge-on to the view is hidden (the top
+     handle in Top view, the corners in side views).
 
 ## Structure
 
@@ -156,10 +164,13 @@ The app runs at the end of every phase.
   - Arrange tab: name, position (Y locked while snap to ground is on), size,
     rotation, and Drop to ground / Center / Duplicate / Delete.
   - Shortcuts: V / R switch mode, Ctrl+D duplicates.
-- [ ] **5. Camera.**
-  - View panel: Top / Front / Right / Bottom / Back / Left / Perspective, each
-    with a short animated move. Keys 7 / 1 / 3 / 0.
-  - Zoom −, %, + and Fit.
+- [x] **5. Camera.**
+  - View panel: Top / Front / Right / Bottom / Back / Left / Home, each with a
+    short animated move. Keys 7 / 1 / 3 / 0.
+  - Orthographic projection (decision 7): axis views use it, Persp | Ortho
+    toggle and key 5.
+  - Zoom −, %, + and Fit. Orbiting, panning or scrolling by hand leaves the
+    named view.
 - [ ] **6. Style tab.**
   - Swatches, colour picker with hex field, finish, opacity.
   - Changes apply to every selected object.
@@ -189,7 +200,6 @@ The app runs at the end of every phase.
 
 - **Autosave.** Mesh geometry would need to be serialized, and stored in
   IndexedDB, since STL imports quickly exceed localStorage's 5 MB.
-- **Orthographic camera for the axis views.** The reference uses perspective.
 - **Resizing several objects at once.** Handles appear for a single selection.
 - **Snapping objects to each other** (lulogo `objectSnap.js`). Alignment guides
   show exact matches only.

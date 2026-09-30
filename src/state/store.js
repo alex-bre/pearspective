@@ -73,7 +73,9 @@ export const useStore = create(
       leftTab: 'shapes',
       rightTab: 'general',
       mode: 'select',
+      // The named view the camera sits in, or null once the user orbits away.
       view: 'home',
+      projection: 'perspective', // or 'orthographic'
     },
 
     /* ---- theme ---- */
@@ -98,7 +100,15 @@ export const useStore = create(
     setLeftTab: (tab) => set((s) => void (s.ui.leftTab = tab)),
     setRightTab: (tab) => set((s) => void (s.ui.rightTab = tab)),
     setMode: (mode) => set((s) => void (s.ui.mode = mode)),
-    setView: (view) => set((s) => void (s.ui.view = view)),
+    /** Go to a named view. Axis views are orthographic; Home is perspective. null = left the view. */
+    setView: (view) =>
+      set((s) => {
+        s.ui.view = view
+        if (view) s.ui.projection = view === 'home' ? 'perspective' : 'orthographic'
+      }),
+    setProjection: (projection) => set((s) => void (s.ui.projection = projection)),
+    toggleProjection: () =>
+      set((s) => void (s.ui.projection = s.ui.projection === 'perspective' ? 'orthographic' : 'perspective')),
 
     /* ---- objects ---- */
     /** Add a shape at ground point [x, z], or at the nearest free spot. */
