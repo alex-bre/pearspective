@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
+import { createObject, freeSpot } from '../model/objects'
 
 /**
  * Where an explicit light/dark choice is remembered. Absent means "follow the
@@ -23,6 +24,13 @@ function storedTheme() {
 }
 
 const initialPref = storedTheme()
+
+// Selecting something moves the right panel from General to Arrange, where the
+// selection's properties are.
+function selectIds(s, ids) {
+  s.selection = ids
+  if (ids.length && s.ui.rightTab === 'general') s.ui.rightTab = 'arrange'
+}
 
 /**
  * Central app store. All lengths are in meters; model/units.js converts for display.
@@ -83,6 +91,32 @@ export const useStore = create(
     setRightTab: (tab) => set((s) => void (s.ui.rightTab = tab)),
     setMode: (mode) => set((s) => void (s.ui.mode = mode)),
     setView: (view) => set((s) => void (s.ui.view = view)),
+
+    /* ---- objects ---- */
+    /** Add a shape at ground point [x, z], or at the nearest free spot. */
+    addObject: (type, at) =>
+      set((s) => {
+        const [x, z] = at ?? freeSpot(s.document, s.settings.grid)
+        const obj = createObject(type, x, z)
+        s.document.objects[obj.id] = obj
+        s.document.order.push(obj.id)
+        selectIds(s, [obj.id])
+      }),
+    removeSelected: () =>
+      set((s) => {
+        for (const id of s.selection) delete s.document.objects[id]
+        s.document.order = s.document.order.filter((id) => s.document.objects[id])
+        s.selection = []
+      }),
+    renameObject: (id, name) => set((s) => void (s.document.objects[id].name = name)),
+
+    /* ---- selection ---- */
+    select: (ids) => set((s) => selectIds(s, ids)),
+    /** Shift-click: add to or remove from the selection, keeping pick order. */
+    toggleSelected: (id) =>
+      set((s) =>
+        selectIds(s, s.selection.includes(id) ? s.selection.filter((i) => i !== id) : [...s.selection, id]),
+      ),
 
     /* ---- settings / playground ---- */
     setSetting: (key, value) => set((s) => void (s.settings[key] = value)),

@@ -1,4 +1,5 @@
 import { useThemeEffect } from './state/useTheme'
+import { useShortcuts } from './useShortcuts'
 import TopBar from './panels/TopBar'
 import LeftPanel from './panels/left/LeftPanel'
 import RightPanel from './panels/right/RightPanel'
@@ -8,6 +9,7 @@ import styles from './App.module.css'
 
 export default function App() {
   useThemeEffect()
+  useShortcuts()
 
   return (
     <div className={styles.app}>

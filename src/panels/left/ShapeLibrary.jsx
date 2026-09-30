@@ -1,3 +1,5 @@
+import { useStore } from '../../state/store'
+import { SHAPE_MIME } from '../../viewport/input'
 import { Group, Hint } from '../common/Controls'
 import styles from './LeftPanel.module.css'
 
@@ -48,11 +50,23 @@ const SHAPES = [
 ]
 
 export default function ShapeLibrary() {
+  const addObject = useStore((s) => s.addObject)
+
   return (
     <Group title="Primitives">
       <div className={styles.shapeGrid}>
         {SHAPES.map((s) => (
-          <button key={s.type} className={styles.shape} title={`Add ${s.label.toLowerCase()}`}>
+          <button
+            key={s.type}
+            className={styles.shape}
+            title={`Add ${s.label.toLowerCase()}`}
+            draggable
+            onClick={() => addObject(s.type)}
+            onDragStart={(e) => {
+              e.dataTransfer.setData(SHAPE_MIME, s.type)
+              e.dataTransfer.effectAllowed = 'copy'
+            }}
+          >
             <svg
               width="34"
               height="34"

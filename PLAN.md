@@ -79,7 +79,7 @@ pearspective/
     viewport/
       Viewport.jsx     canvas host + overlays: mode bar, view panel, zoom bar, measure label
       engine.js        renderer, camera, orbit/transform controls, lights, ground/grid, sync, flyTo, fit
-      useViewportInput.js   picking, move drag, resize handles, drop
+      input.js         pointer + drop input: picking, move drag, resize handles
       guides.js        footprint / extension / alignment lines
     panels/
       TopBar.jsx       logo, undo/redo, Import, Export ▾, theme
@@ -96,9 +96,9 @@ pearspective/
 
 Files get created in the phase that first needs them, not earlier.
 
-**Dependencies:** `react react-dom zustand immer lucide-react`, plus
-`three three-bvh-csg three-mesh-bvh` from phase 2. **Dev:**
-`vite @vitejs/plugin-react`, plus `vitest` once there is logic to test.
+**Dependencies:** `react react-dom zustand immer lucide-react three`, plus
+`three-bvh-csg three-mesh-bvh` in phase 8. **Dev:**
+`vite @vitejs/plugin-react vitest`.
 Loaders, exporters and CSG are loaded with `import()`.
 
 ## Data model
@@ -129,15 +129,17 @@ The app runs at the end of every phase.
     snapping).
   - The viewport overlays (mode bar, view panel, zoom bar) render but have no
     3D view behind them yet.
-- [ ] **2. Scene and selection.**
+- [x] **2. Scene and selection.**
   - Ground, grid (every 5th line stronger), X/Z axis lines, playground edge,
     lights and shadows.
   - `sync()` keeps the scene in step with the document.
   - Add shapes by clicking a tile (placed in a free spot) or by dragging a tile
     onto the ground.
-  - Click, Shift-click, click on empty space and Esc select or clear.
+  - Click, Shift-click, click on empty space and Esc select or clear; Delete
+    removes the selection.
+  - Orbit by dragging empty space, pan with right-drag, zoom with the wheel.
   - Selection box, Objects tab, and the right panel switches General → Arrange
-    on select.
+    on select. The Arrange tab has the name field so far.
 - [ ] **3. Move and guides.**
   - Drag the selection along the ground: it snaps to the grid, stays inside
     the playground, and snaps to the ground (bottom of the box at y = 0, rotated
@@ -154,7 +156,6 @@ The app runs at the end of every phase.
   - Arrange tab: name, position (Y locked while snap to ground is on), size,
     rotation, and Drop to ground / Center / Duplicate / Delete.
 - [ ] **5. Camera.**
-  - Orbit by dragging empty space, pan with right-drag, zoom with the wheel.
   - View panel: Top / Front / Right / Bottom / Back / Left / Perspective, each
     with a short animated move. Keys 7 / 1 / 3 / 0.
   - Zoom −, %, + and Fit.
@@ -182,7 +183,7 @@ The app runs at the end of every phase.
   - Model tests: snap and clamp, groundY on a rotated cube, cube − cube
     bounding box, normalize.
   - IO test: STL round trip.
-  - Shortcuts: V / R, Del, Ctrl+D, Esc.
+  - Shortcuts: V / R, Ctrl+D.
 
 ## Deferred (not requested; add when needed)
 

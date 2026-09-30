@@ -77,6 +77,30 @@ export function NumberInput({ value, onChange, min, max, step = 1, unit, disable
   )
 }
 
+/* Text input that commits on Enter/blur — one change per edit, not per keystroke.
+   An empty entry reverts. */
+export function TextInput({ value, onChange }) {
+  const [text, setText] = useState(value)
+  useEffect(() => setText(value), [value])
+
+  const commit = () => {
+    const v = text.trim()
+    if (v && v !== value) onChange(v)
+    else setText(value)
+  }
+
+  return (
+    <input
+      className={styles.input}
+      type="text"
+      value={text}
+      onChange={(e) => setText(e.target.value)}
+      onKeyDown={(e) => e.key === 'Enter' && e.target.blur()}
+      onBlur={commit}
+    />
+  )
+}
+
 /* Small on/off switch. */
 export function Toggle({ checked, onChange, title, disabled }) {
   return (

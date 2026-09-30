@@ -1,5 +1,8 @@
+import { useEffect, useRef } from 'react'
 import { MousePointer2, RotateCw, Box, Minus, Plus } from 'lucide-react'
 import { useStore } from '../state/store'
+import { createEngine } from './engine'
+import { attachInput } from './input'
 import styles from './Viewport.module.css'
 
 const MODES = [
@@ -16,15 +19,29 @@ const VIEWS = [
   { id: 'left', label: 'Left', title: 'Left' },
 ]
 
-/** The 3D viewport and its floating controls. The scene itself arrives in phase 2. */
+/** The 3D viewport and its floating controls. */
 export default function Viewport() {
+  const hostRef = useRef(null)
   const mode = useStore((s) => s.ui.mode)
   const setMode = useStore((s) => s.setMode)
   const view = useStore((s) => s.ui.view)
   const setView = useStore((s) => s.setView)
 
+  // The engine mirrors the store: synced once now, then on every change.
+  useEffect(() => {
+    const engine = createEngine(hostRef.current)
+    engine.sync(useStore.getState())
+    const unsubscribe = useStore.subscribe(engine.sync)
+    const detachInput = attachInput(hostRef.current, engine)
+    return () => {
+      detachInput()
+      unsubscribe()
+      engine.dispose()
+    }
+  }, [])
+
   return (
-    <main className={styles.viewport}>
+    <main ref={hostRef} className={styles.viewport}>
       <div className={`${styles.floating} ${styles.modeBar} no-select`}>
         {MODES.map(({ id, label, title, Icon }) => (
           <button

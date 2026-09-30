@@ -1,6 +1,8 @@
 import { useStore } from '../../state/store'
 import { Tabs } from '../common/Controls'
 import GeneralTab from './tabs/GeneralTab'
+import ArrangeTab from './tabs/ArrangeTab'
+import ObjectsTab from './tabs/ObjectsTab'
 import styles from './RightPanel.module.css'
 
 const TABS = [
@@ -14,14 +16,17 @@ const TABS = [
 export default function RightPanel() {
   const tab = useStore((s) => s.ui.rightTab)
   const setTab = useStore((s) => s.setRightTab)
+  const hasSelection = useStore((s) => s.selection.length > 0)
 
   return (
     <aside className={`${styles.panel} no-select`}>
       <Tabs tabs={TABS} active={tab} onChange={setTab} />
       <div className={styles.content}>
         {tab === 'general' && <GeneralTab />}
-        {(tab === 'arrange' || tab === 'style') && <NothingSelected />}
-        {tab === 'objects' && <p className={styles.empty}>The scene is empty.</p>}
+        {tab === 'arrange' && (hasSelection ? <ArrangeTab /> : <NothingSelected />)}
+        {tab === 'style' &&
+          (hasSelection ? <p className={styles.empty}>Colour, finish and opacity arrive in phase 6.</p> : <NothingSelected />)}
+        {tab === 'objects' && <ObjectsTab />}
       </div>
     </aside>
   )
