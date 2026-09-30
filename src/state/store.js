@@ -80,6 +80,8 @@ export const useStore = create(
       // The named view the camera sits in, or null once the user orbits away.
       view: 'home',
       projection: 'perspective', // or 'orthographic'
+      // Status-bar message: work in progress (ends in "…") or a short-lived result.
+      busy: '',
     },
 
     /* ---- theme ---- */
@@ -104,6 +106,7 @@ export const useStore = create(
     setLeftTab: (tab) => set((s) => void (s.ui.leftTab = tab)),
     setRightTab: (tab) => set((s) => void (s.ui.rightTab = tab)),
     setMode: (mode) => set((s) => void (s.ui.mode = mode)),
+    setBusy: (message) => set((s) => void (s.ui.busy = message)),
     /** Go to a named view. Axis views are orthographic; Home is perspective. null = left the view. */
     setView: (view) =>
       set((s) => {
@@ -162,6 +165,38 @@ export const useStore = create(
         const o = s.document.objects[id]
         o.position = [0, o.position[1], 0]
       }),
+    /**
+     * Replace the two selected objects with A op B (A = first picked), as one
+     * undo step. op: 'union' | 'subtract' | 'intersect'.
+     */
+    booleanSelected: async (op) => {
+      const { selection, document: doc } = get()
+      if (selection.length !== 2) return
+      const [a, b] = selection.map((id) => doc.objects[id])
+      set((s) => void (s.ui.busy = 'Combining…'))
+      let result
+      try {
+        const { combine } = await import('../model/boolean')
+        result = combine(a, b, op)
+      } catch (e) {
+        if (e.name !== 'EmptyResult') console.error(e)
+        set((s) => void (s.ui.busy = e.name === 'EmptyResult' ? e.message : 'Boolean operation failed'))
+        return
+      }
+      // Immer gives a changed object a new reference: if A or B moved (or went)
+      // while this ran, the result is stale — drop it.
+      const now = get().document.objects
+      if (now[a.id] !== a || now[b.id] !== b) return set((s) => void (s.ui.busy = ''))
+      set((s) => {
+        delete s.document.objects[a.id]
+        delete s.document.objects[b.id]
+        s.document.objects[result.id] = result
+        s.document.order = s.document.order.flatMap((id) => (id === a.id ? [result.id] : id === b.id ? [] : [id]))
+        settle(s, s.document.objects[result.id])
+        selectIds(s, [result.id])
+        s.ui.busy = ''
+      })
+    },
     /** Copy the selection one width (plus a grid step) along X and select the copies. */
     duplicateSelected: () => {
       const { document: doc, selection, settings } = get()

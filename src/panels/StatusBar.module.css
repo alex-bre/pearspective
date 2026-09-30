@@ -17,3 +17,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.hint[data-busy] {
+  color: var(--text);
+  font-weight: 500;
+}

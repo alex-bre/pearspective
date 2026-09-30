@@ -104,8 +104,8 @@ pearspective/
 
 Files get created in the phase that first needs them, not earlier.
 
-**Dependencies:** `react react-dom zustand immer lucide-react three`, plus
-`three-bvh-csg three-mesh-bvh` in phase 8. **Dev:**
+**Dependencies:** `react react-dom zustand immer lucide-react three
+ three-bvh-csg three-mesh-bvh`. **Dev:**
 `vite @vitejs/plugin-react vitest`.
 Loaders, exporters and CSG are loaded with `import()`.
 
@@ -179,11 +179,12 @@ The app runs at the end of every phase.
   - Continuous controls (opacity slider, colour picker) coalesce: changes with
     the same key less than a second apart are one step.
   - Ctrl+Z, Ctrl+Shift+Z, Ctrl+Y, and the top-bar buttons.
-- [ ] **8. Boolean.**
+- [x] **8. Boolean.**
   - Enabled when exactly 2 objects are selected; a hint shows which is A and
     which is B.
   - Union / Subtract / Intersect replace both objects with one `mesh` object,
-    as one undo step.
+    as one undo step. The result takes A's place in the list and keeps A's
+    rotation and style.
   - Errors show in the status bar.
 - [ ] **9. Import/export.**
   - Import from the button or by dropping files on the viewport:

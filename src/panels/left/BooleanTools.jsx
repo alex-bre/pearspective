@@ -12,13 +12,15 @@ const OPS = [
 export default function BooleanTools() {
   const selection = useStore((s) => s.selection)
   const objects = useStore((s) => s.document.objects)
-  const ready = selection.length === 2
+  const busy = useStore((s) => s.ui.busy)
+  const booleanSelected = useStore((s) => s.booleanSelected)
+  const ready = selection.length === 2 && !busy
 
   return (
     <Group title="Boolean">
       <div className={styles.opList}>
         {OPS.map(({ op, label, math, Icon }) => (
-          <button key={op} className={styles.op} disabled={!ready}>
+          <button key={op} className={styles.op} disabled={!ready} onClick={() => booleanSelected(op)}>
             <Icon size={16} />
             <span className={styles.opLabel}>{label}</span>
             <span className={styles.opMath}>{math}</span>
@@ -26,7 +28,7 @@ export default function BooleanTools() {
         ))}
       </div>
       <Hint>
-        {ready
+        {selection.length === 2
           ? `A = ${objects[selection[0]].name}, B = ${objects[selection[1]].name}`
           : 'Select two objects (Shift-click) to combine them. The first one picked is A.'}
       </Hint>

@@ -42,6 +42,27 @@ export function createObject(type, x, z) {
   }
 }
 
+/**
+ * A 'mesh' object (a boolean result or an import) named "<label> n", placed at
+ * `position` with `rotation`/`size`, styled like `style` (color, finish, opacity).
+ */
+export function meshObject(label, meshId, { position, rotation = [0, 0, 0], size }, style) {
+  seq++
+  typeCounts[label] = (typeCounts[label] || 0) + 1
+  return {
+    id: `o${seq}`,
+    type: 'mesh',
+    meshId,
+    name: `${label} ${typeCounts[label]}`,
+    position,
+    rotation,
+    size,
+    color: style.color,
+    finish: style.finish,
+    opacity: style.opacity,
+  }
+}
+
 /** A copy of `obj` under a fresh id, shifted `dx` along X. */
 export function duplicateObject(obj, dx) {
   seq++
