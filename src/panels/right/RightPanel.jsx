@@ -1,5 +1,6 @@
+import { PanelRightClose, PanelRightOpen } from 'lucide-react'
 import { useStore } from '../../state/store'
-import { Tabs } from '../common/Controls'
+import { PanelToggle, Tabs } from '../common/Controls'
 import GeneralTab from './tabs/GeneralTab'
 import ArrangeTab from './tabs/ArrangeTab'
 import ObjectsTab from './tabs/ObjectsTab'
@@ -13,15 +14,30 @@ const TABS = [
   { id: 'objects', label: 'Objects' },
 ]
 
-/** Right properties panel. */
+/** Right properties panel. Collapses to a thin rail with an expand button. */
 export default function RightPanel() {
   const tab = useStore((s) => s.ui.rightTab)
   const setTab = useStore((s) => s.setRightTab)
   const hasSelection = useStore((s) => s.selection.length > 0)
+  const collapsed = useStore((s) => s.ui.rightCollapsed)
+  const toggle = useStore((s) => s.toggleRightPanel)
+
+  if (collapsed) {
+    return (
+      <aside className={`${styles.rail} no-select`}>
+        <PanelToggle Icon={PanelRightOpen} title="Expand properties panel" onClick={toggle} />
+      </aside>
+    )
+  }
 
   return (
     <aside className={`${styles.panel} no-select`}>
-      <Tabs tabs={TABS} active={tab} onChange={setTab} />
+      <Tabs
+        tabs={TABS}
+        active={tab}
+        onChange={setTab}
+        start={<PanelToggle Icon={PanelRightClose} title="Collapse properties panel" onClick={toggle} />}
+      />
       <div className={styles.content}>
         {tab === 'general' && <GeneralTab />}
         {tab === 'arrange' && (hasSelection ? <ArrangeTab /> : <NothingSelected />)}

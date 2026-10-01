@@ -8,6 +8,15 @@
   border-left: 1px solid var(--border);
 }
 
+/* Collapsed state: a thin rail holding just the expand button. */
+.rail {
+  grid-area: right;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+}
+
 .content {
   flex: 1;
   overflow-y: auto;

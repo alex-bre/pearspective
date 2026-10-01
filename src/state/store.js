@@ -77,6 +77,8 @@ export const useStore = create(
       theme: initialPref ?? systemTheme(),
       leftTab: 'shapes',
       rightTab: 'general',
+      leftCollapsed: false, // left tool panel collapsed to a rail
+      rightCollapsed: false, // right properties panel collapsed to a rail
       mode: 'select',
       // The named view the camera sits in, or null once the user orbits away.
       view: 'home',
@@ -106,6 +108,11 @@ export const useStore = create(
     /* ---- ui ---- */
     setLeftTab: (tab) => set((s) => void (s.ui.leftTab = tab)),
     setRightTab: (tab) => set((s) => void (s.ui.rightTab = tab)),
+    toggleLeftPanel: () => set((s) => void (s.ui.leftCollapsed = !s.ui.leftCollapsed)),
+    toggleRightPanel: () => set((s) => void (s.ui.rightCollapsed = !s.ui.rightCollapsed)),
+    // Explicit setters back the viewport-driven collapse (state/responsiveLayout.js).
+    setLeftCollapsed: (v) => set((s) => void (s.ui.leftCollapsed = !!v)),
+    setRightCollapsed: (v) => set((s) => void (s.ui.rightCollapsed = !!v)),
     setMode: (mode) => set((s) => void (s.ui.mode = mode)),
     setBusy: (message) => set((s) => void (s.ui.busy = message)),
     /** Go to a named view. Axis views are orthographic; Home is perspective. null = left the view. */

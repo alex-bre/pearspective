@@ -66,7 +66,7 @@ export default function TopBar() {
       <div className={styles.group}>
         <button className={styles.btn} title="Import STL or GLB" onClick={() => fileRef.current.click()}>
           <Upload size={15} />
-          <span>Import</span>
+          <span className={styles.btnLabel}>Import</span>
         </button>
         <input
           ref={fileRef}
@@ -88,7 +88,7 @@ export default function TopBar() {
             onClick={() => setExportOpen((o) => !o)}
           >
             <Download size={15} />
-            <span>Export</span>
+            <span className={styles.btnLabel}>Export</span>
             <ChevronDown size={13} />
           </button>
           {exportOpen && (

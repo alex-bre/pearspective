@@ -106,3 +106,28 @@
   font-size: 11px;
   color: var(--text-muted);
 }
+
+/* Narrow: tighten the gutters, then drop the wordmark and the button labels —
+   the icons alone carry Import/Export once there's no room for both. */
+@media (max-width: 1100px) {
+  .topbar {
+    gap: 10px;
+    padding: 0 8px;
+  }
+}
+
+/* Too narrow for the wordmark: the pear mark stands alone. */
+@media (max-width: 900px) {
+  .wordmark {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .btn {
+    padding: 0 8px;
+  }
+  .btnLabel {
+    display: none;
+  }
+}

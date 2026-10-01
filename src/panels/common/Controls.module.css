@@ -161,6 +161,30 @@
   border-bottom-color: var(--accent);
 }
 
+/* The panels are fluid down to ~240px — four tab labels beside the collapse
+   button only fit there at 11px. */
+@media (max-width: 1200px) {
+  .tab {
+    font-size: 11px;
+  }
+}
+
+.panelToggle {
+  width: var(--rail-w);
+  height: 36px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+}
+.panelToggle:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
 .prefix {
   position: absolute;
   left: 7px;

@@ -33,8 +33,12 @@ export default function StatusBar() {
         {busy || hint}
       </span>
       <span className="mono">
-        {count} object{count === 1 ? '' : 's'} · {toUnit(playground.w, u)} × {toUnit(playground.d, u)} {u} · grid{' '}
-        {formatLength(settings.grid, u)} · snap {settings.snap ? 'on' : 'off'}
+        {count} object{count === 1 ? '' : 's'}
+        <span className={styles.extra}>
+          {' '}
+          · {toUnit(playground.w, u)} × {toUnit(playground.d, u)} {u} · grid {formatLength(settings.grid, u)} · snap{' '}
+          {settings.snap ? 'on' : 'off'}
+        </span>
       </span>
     </footer>
   )

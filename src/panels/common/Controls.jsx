@@ -206,10 +206,12 @@ export function Hint({ children }) {
   return <p className={styles.hint}>{children}</p>
 }
 
-/* Tab strip for the side panels. tabs: [{ id, label }] */
-export function Tabs({ tabs, active, onChange }) {
+/* Tab strip for the side panels. tabs: [{ id, label }]. `start` / `end` sit
+   beside the tabs — the panel's collapse button, on its inner edge. */
+export function Tabs({ tabs, active, onChange, start, end }) {
   return (
     <div className={styles.tabs} role="tablist">
+      {start}
       {tabs.map((t) => (
         <button
           key={t.id}
@@ -221,6 +223,16 @@ export function Tabs({ tabs, active, onChange }) {
           {t.label}
         </button>
       ))}
+      {end}
     </div>
+  )
+}
+
+/* Collapse / expand button for a side panel: in its tab strip, or alone on its rail. */
+export function PanelToggle({ Icon, title, onClick }) {
+  return (
+    <button className={styles.panelToggle} title={title} aria-label={title} onClick={onClick}>
+      <Icon size={16} />
+    </button>
   )
 }

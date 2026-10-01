@@ -73,6 +73,7 @@ pearspective/
       store.js         document, selection, ui, settings + actions
       history.js       from lulogo (one undo step per drag)
       useTheme.js      from lulogo
+      responsiveLayout.js  from lulogo: collapse the side panels on narrow viewports
     model/
       units.js         m / cm / mm conversion for display
       objects.js       createObject, LABELS, SWATCHES, FINISH, freeSpot
@@ -205,5 +206,4 @@ The app runs at the end of every phase.
   show exact matches only.
 - **Source link / About dialog.** AGPL §13 requires offering the source to
   network users, so add it once the app is hosted and has a repo URL.
-- **Also from lulogo:** collapsible/responsive panels,
-  THIRD-PARTY-NOTICES, self-hosted fonts.
+- **Also from lulogo:** THIRD-PARTY-NOTICES, self-hosted fonts.

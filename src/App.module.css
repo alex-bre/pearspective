@@ -1,4 +1,6 @@
 .app {
+  --left-w: var(--left-w-open);
+  --right-w: var(--right-w-open);
   display: grid;
   /* minmax(0, 1fr) so the viewport column can shrink instead of pushing the
      right panel off-screen. */
@@ -14,4 +16,12 @@
   overflow: hidden;
   background: var(--bg);
   color: var(--text);
+}
+
+.leftCollapsed {
+  --left-w: var(--rail-w);
+}
+
+.rightCollapsed {
+  --right-w: var(--rail-w);
 }

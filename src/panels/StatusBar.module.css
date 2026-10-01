@@ -21,3 +21,15 @@
   color: var(--text);
   font-weight: 500;
 }
+
+/* Narrow: the hint keeps what room there is; the settings it echoes are in the
+   General tab anyway. */
+@media (max-width: 900px) {
+  .status {
+    gap: 10px;
+    padding: 0 8px;
+  }
+  .extra {
+    display: none;
+  }
+}

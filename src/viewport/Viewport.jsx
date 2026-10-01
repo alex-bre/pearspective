@@ -67,7 +67,7 @@ export default function Viewport() {
             onClick={() => setMode(id)}
           >
             <Icon size={15} />
-            <span>{label}</span>
+            <span className={styles.modeLabel}>{label}</span>
           </button>
         ))}
       </div>

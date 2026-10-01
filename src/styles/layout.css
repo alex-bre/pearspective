@@ -1,12 +1,18 @@
 /*
- * Layout scale tokens. Side panels are fluid between a comfortable width and
- * the narrowest width their controls still fit in.
+ * Layout scale tokens. Editor chrome (top bar, side panels, status bar, form
+ * controls) reads these so it shrinks as the viewport does and the 3D view
+ * keeps as much room as it can.
+ *
+ * Side panels are fluid between a comfortable width and the narrowest width
+ * their controls still fit in. Below the thresholds in state/responsiveLayout.js
+ * they collapse to rails instead of shrinking further.
  */
 :root {
   --top-h: 48px;
   --status-h: 28px;
-  --left-w: clamp(200px, 17vw, 248px);
-  --right-w: clamp(240px, 20vw, 288px);
+  --rail-w: 32px;
+  --left-w-open: clamp(200px, 17vw, 248px);
+  --right-w-open: clamp(240px, 20vw, 288px);
 
   --control-h: 28px;
   --btn-h: 30px;
@@ -14,6 +20,7 @@
   --panel-pad-x: 12px;
 }
 
+/* Narrow: buy back horizontal room inside the panels themselves. */
 @media (max-width: 1200px) {
   :root {
     --field-label-w: 56px;
@@ -21,9 +28,11 @@
   }
 }
 
+/* Short: the top and status bars give vertical room back to the viewport. */
 @media (max-height: 760px) {
   :root {
     --top-h: 42px;
+    --status-h: 24px;
     --control-h: 26px;
     --btn-h: 28px;
   }

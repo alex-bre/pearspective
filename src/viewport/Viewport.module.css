@@ -151,3 +151,24 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 3px;
 }
+
+/* Narrow: the view panel and zoom bar share the bottom edge, so both slim down
+   and the mode bar drops to icons (their titles still name them). */
+@media (max-width: 600px) {
+  .modeBtn {
+    padding: 0 8px;
+  }
+  .modeLabel {
+    display: none;
+  }
+  .viewPanel {
+    width: 132px;
+    padding: 6px;
+  }
+  .panelTitle {
+    display: none;
+  }
+  .zoomLabel {
+    min-width: 38px;
+  }
+}
