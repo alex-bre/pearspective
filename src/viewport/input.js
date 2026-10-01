@@ -23,7 +23,7 @@ const fmt = (m) => toUnit(m, store().settings.unit)
  *             selection along the ground (Select mode)
  *  - empty  : click clears the selection; drag orbits (OrbitControls)
  * A whole gesture is one undo step. Dropping a shape tile adds that shape
- * where it lands. Returns a cleanup.
+ * where it lands; dropping STL / GLB files imports them. Returns a cleanup.
  */
 export function attachInput(host, engine) {
   const { canvas, controls, gizmo } = engine
@@ -175,15 +175,21 @@ export function attachInput(host, engine) {
     engine.showLabel(rotation.map((r, i) => `${'XYZ'[i]} ${Math.round(r)}°`).join('   '), [mesh.userData.id])
   }
 
-  /* ---- drop a shape tile ---- */
+  /* ---- drop a shape tile or model files ---- */
 
   const onDragOver = (e) => {
-    if (!e.dataTransfer.types.includes(SHAPE_MIME)) return
+    const { types } = e.dataTransfer
+    if (!types.includes(SHAPE_MIME) && !types.includes('Files')) return
     e.preventDefault()
     e.dataTransfer.dropEffect = 'copy'
   }
 
   const onDrop = (e) => {
+    if (e.dataTransfer.files.length) {
+      e.preventDefault() // or the browser opens the file
+      store().importFiles(e.dataTransfer.files)
+      return
+    }
     const type = e.dataTransfer.getData(SHAPE_MIME)
     if (!type) return
     e.preventDefault()

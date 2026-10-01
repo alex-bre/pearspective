@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
-import { createObject, duplicateObject, freeSpot } from '../model/objects'
+import { createObject, duplicateObject, freeSpot, meshObject, LABELS, SWATCHES } from '../model/objects'
+import { registerGeometry } from '../model/geometry'
 import { groundY } from '../model/transform'
 import { snapValue } from '../model/snap'
 
@@ -196,6 +197,62 @@ export const useStore = create(
         selectIds(s, [result.id])
         s.ui.busy = ''
       })
+    },
+    /**
+     * Import STL / GLB files: each becomes a 'mesh' object on the ground in a
+     * free spot. All of them together are one undo step; files that fail are
+     * reported in the status bar and skipped.
+     */
+    importFiles: async (files) => {
+      files = [...files]
+      if (!files.length) return
+      set((s) => void (s.ui.busy = files.length === 1 ? `Importing ${files[0].name}…` : `Importing ${files.length} files…`))
+      const parsed = []
+      const failed = []
+      try {
+        const { parseModel } = await import('../io/importFiles')
+        for (const f of files) {
+          try {
+            parsed.push(await parseModel(f.name, await f.arrayBuffer()))
+          } catch (e) {
+            console.error(e)
+            failed.push(f.name)
+          }
+        }
+      } catch (e) {
+        console.error(e)
+        return set((s) => void (s.ui.busy = 'Import failed'))
+      }
+      set((s) => {
+        const ids = []
+        for (const m of parsed) {
+          const [x, z] = freeSpot(s.document, s.settings.grid, Math.max(m.size[0], m.size[2]))
+          const style = { color: m.color ?? SWATCHES[6], finish: 'satin', opacity: 1 }
+          const obj = meshObject(LABELS.mesh, registerGeometry(m.geometry), { position: [x, m.size[1] / 2, z], size: m.size }, style)
+          obj.name = m.name
+          s.document.objects[obj.id] = obj
+          s.document.order.push(obj.id)
+          ids.push(obj.id)
+        }
+        if (ids.length) selectIds(s, ids)
+        s.ui.busy = failed.length ? `Could not import ${failed.join(', ')}` : ''
+      })
+    },
+    /** Download the whole scene: 'stl' (binary, mm, Z-up) or 'glb' (meters, with colours). */
+    exportScene: async (kind) => {
+      const doc = get().document
+      if (!doc.order.length) return set((s) => void (s.ui.busy = 'Nothing to export'))
+      const label = kind.toUpperCase()
+      set((s) => void (s.ui.busy = `Exporting ${label}…`))
+      try {
+        const [{ toStl, toGlb }, { download }] = await Promise.all([import('../io/exportScene'), import('../io/download')])
+        if (kind === 'stl') download(toStl(doc), 'pearspective-scene.stl', 'model/stl')
+        else download(await toGlb(doc), 'pearspective-scene.glb', 'model/gltf-binary')
+        set((s) => void (s.ui.busy = `Exported ${label}`))
+      } catch (e) {
+        console.error(e)
+        set((s) => void (s.ui.busy = 'Export failed'))
+      }
     },
     /** Copy the selection one width (plus a grid step) along X and select the copies. */
     duplicateSelected: () => {

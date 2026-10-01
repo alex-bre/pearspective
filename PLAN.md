@@ -1,15 +1,11 @@
 # Pearspective — implementation plan
 
-A web-based 3D editor. The behaviour comes from the prototype in
-`design-reference/Pearspective.dc.html`. The code structure and feel come from
-`../lulogo`, which has the same `src/` tree as `../infinite-canvas-editor`.
-
-`design-reference/support.js` only boots the prototype (a template engine plus
-React from a CDN). Nothing in it carries over.
+A web-based 3D editor. The code structure and feel come from `../lulogo`,
+which has the same `src/` tree as `../infinite-canvas-editor`.
 
 ## Approach
 
-Port the prototype's behaviour into lulogo's structure:
+Build it in lulogo's structure:
 
 - React 18 + Vite
 - a zustand + immer store
@@ -17,16 +13,15 @@ Port the prototype's behaviour into lulogo's structure:
 - lucide-react icons
 - vitest
 
-The one structural change: **the store's document holds the state, and the
-three.js scene only draws it.** In the prototype the meshes themselves are the
-state. With the document in charge, lulogo's snapshot undo (`state/history.js`)
-works almost unchanged.
+The key structural rule: **the store's document holds the state, and the
+three.js scene only draws it.** The meshes are never the state. With the
+document in charge, lulogo's snapshot undo (`state/history.js`) works almost
+unchanged.
 
 ## Decisions
 
-1. **Plain three.js, not react-three-fiber.** The prototype's code ports almost
-   line for line. One `engine.js` owns the renderer, camera and controls, and
-   exposes `sync(document, selection)`.
+1. **Plain three.js, not react-three-fiber.** One `engine.js` owns the
+   renderer, camera and controls, and exposes `sync(document, selection)`.
 2. **Unit geometry; the object's size is its scale.** Every primitive is a
    1×1×1 geometry, and `size` becomes `mesh.scale`. Size fields, resize
    snapping, imported meshes and boolean results then share one code path:
@@ -186,7 +181,7 @@ The app runs at the end of every phase.
     as one undo step. The result takes A's place in the list and keeps A's
     rotation and style.
   - Errors show in the status bar.
-- [ ] **9. Import/export.**
+- [x] **9. Import/export.**
   - Import from the button or by dropping files on the viewport:
     - STL is converted from mm and from Z-up to Y-up.
     - GLB is baked into one mesh, in meters, with the first material's colour.

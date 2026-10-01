@@ -16,6 +16,9 @@ function PearMark() {
   )
 }
 
+// Kept in step with io/importFiles' IMPORT_EXTENSIONS, which loads on demand.
+const IMPORT_ACCEPT = '.stl,.glb,.gltf'
+
 const EXPORTS = [
   { kind: 'stl', label: 'STL', sub: 'Mesh for 3D printing · mm · Z-up' },
   { kind: 'glb', label: 'GLB', sub: 'glTF binary with colours · meters' },
@@ -26,8 +29,11 @@ export default function TopBar() {
   const toggleTheme = useStore((s) => s.toggleTheme)
   const canUndo = useStore((s) => s.past.length > 0)
   const canRedo = useStore((s) => s.future.length > 0)
+  const importFiles = useStore((s) => s.importFiles)
+  const exportScene = useStore((s) => s.exportScene)
   const [exportOpen, setExportOpen] = useState(false)
   const menuRef = useRef(null)
+  const fileRef = useRef(null)
 
   // Close the export menu on any press outside it.
   useEffect(() => {
@@ -58,10 +64,21 @@ export default function TopBar() {
       </div>
 
       <div className={styles.group}>
-        <button className={styles.btn} title="Import STL or GLB">
+        <button className={styles.btn} title="Import STL or GLB" onClick={() => fileRef.current.click()}>
           <Upload size={15} />
           <span>Import</span>
         </button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept={IMPORT_ACCEPT}
+          multiple
+          hidden
+          onChange={(e) => {
+            importFiles(e.target.files)
+            e.target.value = '' // so picking the same file again still fires
+          }}
+        />
         <div className={styles.menuWrap} ref={menuRef}>
           <button
             className={`${styles.btn} ${styles.menuBtn}`}
@@ -77,7 +94,15 @@ export default function TopBar() {
           {exportOpen && (
             <div className={styles.menu} role="menu">
               {EXPORTS.map((x) => (
-                <button key={x.kind} role="menuitem" className={styles.menuItem} onClick={() => setExportOpen(false)}>
+                <button
+                  key={x.kind}
+                  role="menuitem"
+                  className={styles.menuItem}
+                  onClick={() => {
+                    setExportOpen(false)
+                    exportScene(x.kind)
+                  }}
+                >
                   <span className={styles.menuLabel}>{x.label}</span>
                   <span className={styles.menuSub}>{x.sub}</span>
                 </button>

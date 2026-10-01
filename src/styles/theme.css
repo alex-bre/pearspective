@@ -1,6 +1,6 @@
 /*
- * Theme tokens (from design-reference/Pearspective.dc.html). Editor chrome
- * reads these; scene objects keep their own colours regardless of theme.
+ * Theme tokens. Editor chrome reads these; scene objects keep their own
+ * colours regardless of theme.
  */
 :root,
 [data-theme='light'] {
