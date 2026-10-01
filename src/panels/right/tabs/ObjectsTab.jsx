@@ -2,7 +2,7 @@ import { useStore } from '../../../state/store'
 import { LABELS } from '../../../model/objects'
 import styles from '../RightPanel.module.css'
 
-/** Every object in the scene. Click selects, Shift-click adds or removes. */
+/** Every object in the scene. Click selects, Ctrl-click (Cmd on a Mac) adds or removes. */
 export default function ObjectsTab() {
   const order = useStore((s) => s.document.order)
   const objects = useStore((s) => s.document.objects)
@@ -21,7 +21,7 @@ export default function ObjectsTab() {
             key={id}
             className={styles.item}
             data-active={selection.includes(id) || undefined}
-            onClick={(e) => (e.shiftKey ? toggleSelected(id) : select([id]))}
+            onClick={(e) => (e.ctrlKey || e.metaKey ? toggleSelected(id) : select([id]))}
           >
             <span className={styles.itemSwatch} style={{ background: o.color }} />
             <span className={styles.itemName}>{o.name}</span>

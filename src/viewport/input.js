@@ -13,21 +13,30 @@ const DEG = Math.PI / 180
 
 const store = () => useStore.getState()
 const fmt = (m) => toUnit(m, store().settings.unit)
+/** Ctrl (Cmd on a Mac) adds to or removes from the selection. */
+const multi = (e) => e.ctrlKey || e.metaKey
 
 /**
  * Wires pointer and drop input on the viewport to the store. One gesture runs
  * from pointerdown to pointerup:
  *  - gizmo  : a rotate ring (Rotate mode) — TransformControls does the work
  *  - resize : a handle on the selected object (Select mode)
- *  - object : press an object to select it (Shift toggles); drag to move the
+ *  - object : press an object to select it (Ctrl toggles); drag to move the
  *             selection along the ground (Select mode)
- *  - empty  : click clears the selection; drag orbits (OrbitControls)
+ *  - box    : on empty space, click clears the selection; drag selects every
+ *             object the box touches (Ctrl adds them to the selection)
+ *  - orbit  : Alt-drag or a touch on empty space orbits (OrbitControls), as
+ *             does a middle-drag, which never reaches this handler
+ *  - menu   : a right-click on an object selects it (unless it already is)
+ *             and calls `onMenu({ x, y })`; a right-drag pans (OrbitControls)
  * A whole gesture is one undo step. Dropping a shape tile adds that shape
- * where it lands; dropping STL / GLB files imports them. Returns a cleanup.
+ * where it lands; dropping STL / GLB files imports them. `marquee` is the
+ * element drawn as the selection box. Returns a cleanup.
  */
-export function attachInput(host, engine) {
+export function attachInput(host, engine, { marquee, onMenu }) {
   const { canvas, controls, gizmo } = engine
   let g = null // the gesture in progress
+  let rightPress = null // where the right button went down, until it comes up
 
   const travelled = (e) => Math.hypot(e.clientX - g.x, e.clientY - g.y)
 
@@ -36,7 +45,9 @@ export function attachInput(host, engine) {
   // Capture phase on the host, so this runs before OrbitControls' own listener
   // on the canvas and can switch it off for presses that aren't orbits.
   const onDown = (e) => {
-    if (e.button !== 0 || e.target !== canvas) return
+    if (e.target !== canvas) return
+    if (e.button === 2) rightPress = { x: e.clientX, y: e.clientY }
+    if (e.button !== 0) return
     const at = { x: e.clientX, y: e.clientY }
     if (engine.gizmoHovered()) {
       controls.enabled = false
@@ -52,14 +63,21 @@ export function attachInput(host, engine) {
     }
     const id = engine.pickObject(e)
     if (id == null) {
-      g = { kind: 'empty', ...at }
+      // Touch keeps one-finger orbiting; a mouse or pen drags a selection box.
+      if (e.altKey || e.pointerType === 'touch') {
+        g = { kind: 'orbit', ...at }
+        return
+      }
+      controls.enabled = false
+      // The camera holds still until release, so the objects' screen bounds are taken once.
+      g = { kind: 'box', ...at, multi: multi(e), before: store().selection, rects: engine.screenRects() }
       return
     }
     controls.enabled = false
     const s = store()
-    if (e.shiftKey) {
+    if (multi(e)) {
       s.toggleSelected(id)
-      g = { kind: 'object', id, shift: true, ...at }
+      g = { kind: 'object', id, multi: true, ...at }
       return
     }
     if (!s.selection.includes(id)) s.select([id])
@@ -101,6 +119,32 @@ export function attachInput(host, engine) {
     if (!g) return hover(e)
     if (g.kind === 'object' && g.starts) move(e)
     else if (g.kind === 'resize' && g.p0) resize(e)
+    else if (g.kind === 'box') box(e)
+  }
+
+  function box(e) {
+    if (!g.moving && travelled(e) < CLICK_SLOP) return
+    g.moving = true
+    const r = {
+      left: Math.min(g.x, e.clientX),
+      right: Math.max(g.x, e.clientX),
+      top: Math.min(g.y, e.clientY),
+      bottom: Math.max(g.y, e.clientY),
+    }
+    const h = host.getBoundingClientRect()
+    Object.assign(marquee.style, {
+      display: 'block',
+      transform: `translate(${r.left - h.left}px, ${r.top - h.top}px)`,
+      width: `${r.right - r.left}px`,
+      height: `${r.bottom - r.top}px`,
+    })
+
+    const { document: doc, selection, select } = store()
+    const touched = (b) => b.left <= r.right && b.right >= r.left && b.top <= r.bottom && b.bottom >= r.top
+    const hits = doc.order.filter((id) => g.rects.has(id) && touched(g.rects.get(id)))
+    // Added after what was already selected, so the first pick stays boolean A.
+    const next = g.multi ? [...new Set([...g.before, ...hits])] : hits
+    if (next.join() !== selection.join()) select(next)
   }
 
   function move(e) {
@@ -138,17 +182,33 @@ export function attachInput(host, engine) {
   /* ---- release ---- */
 
   const onUp = (e) => {
+    if (e.button === 2 && rightPress) openMenu(e)
     if (!g) return
     const s = store()
-    if (g.kind === 'empty' && travelled(e) < CLICK_SLOP && !e.shiftKey) s.select([])
+    if (g.kind === 'orbit' && travelled(e) < CLICK_SLOP && !multi(e)) s.select([])
+    if (g.kind === 'box' && !g.moving && !g.multi) s.select([])
+    if (g.kind === 'box') marquee.style.display = 'none'
     // A plain click on one object of a multi-selection narrows it to that object.
-    if (g.kind === 'object' && !g.moving && !g.shift && s.selection.length > 1) s.select([g.id])
+    if (g.kind === 'object' && !g.moving && !g.multi && s.selection.length > 1) s.select([g.id])
     endHistoryBatch()
     engine.clearGuides()
     engine.hideLabel()
     controls.enabled = true
     g = null
     hover(e)
+  }
+
+  // On release rather than on `contextmenu`, which Linux and macOS fire at the
+  // press — before it is known whether the press is a click or a pan.
+  function openMenu(e) {
+    const slid = Math.hypot(e.clientX - rightPress.x, e.clientY - rightPress.y) >= CLICK_SLOP
+    rightPress = null
+    if (slid || e.target !== canvas) return
+    const id = engine.pickObject(e)
+    if (id == null) return
+    const s = store()
+    if (!s.selection.includes(id)) s.select([id])
+    onMenu({ x: e.clientX, y: e.clientY })
   }
 
   function hover(e) {
@@ -198,8 +258,8 @@ export function attachInput(host, engine) {
     addObject(type, p && clampToPlayground(p.map((v) => snapValue(v, settings.grid, settings.snap)), document.playground))
   }
 
-  // Right-drag pans; keep the browser menu out of the way.
-  const onMenu = (e) => e.target === canvas && e.preventDefault()
+  // Right-drag pans and a right-click opens our menu; keep the browser's away.
+  const onContextMenu = (e) => e.target === canvas && e.preventDefault()
 
   // Orbiting, panning or zooming by hand leaves the named view.
   const onCameraStart = () => store().ui.view && store().setView(null)
@@ -207,7 +267,7 @@ export function attachInput(host, engine) {
   host.addEventListener('pointerdown', onDown, true)
   host.addEventListener('dragover', onDragOver)
   host.addEventListener('drop', onDrop)
-  host.addEventListener('contextmenu', onMenu)
+  host.addEventListener('contextmenu', onContextMenu)
   window.addEventListener('pointermove', onMove)
   window.addEventListener('pointerup', onUp)
   window.addEventListener('pointercancel', onUp)
@@ -220,7 +280,7 @@ export function attachInput(host, engine) {
     host.removeEventListener('pointerdown', onDown, true)
     host.removeEventListener('dragover', onDragOver)
     host.removeEventListener('drop', onDrop)
-    host.removeEventListener('contextmenu', onMenu)
+    host.removeEventListener('contextmenu', onContextMenu)
     window.removeEventListener('pointermove', onMove)
     window.removeEventListener('pointerup', onUp)
     window.removeEventListener('pointercancel', onUp)

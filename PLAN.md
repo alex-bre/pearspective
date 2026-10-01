@@ -139,9 +139,11 @@ The app runs at the end of every phase.
   - `sync()` keeps the scene in step with the document.
   - Add shapes by clicking a tile (placed in a free spot) or by dragging a tile
     onto the ground.
-  - Click, Shift-click, click on empty space and Esc select or clear; Delete
-    removes the selection.
-  - Orbit by dragging empty space, pan with right-drag, zoom with the wheel.
+  - Click, Ctrl-click (Cmd on a Mac), click on empty space and Esc select or
+    clear; dragging on empty space draws a selection box (Ctrl adds to the
+    selection). Delete removes the selection.
+  - Orbit with middle-drag or Alt-drag (one finger on touch), pan with
+    right-drag, zoom with the wheel.
   - Selection box, Objects tab, and the right panel switches General → Arrange
     on select. The Arrange tab has the name field so far.
 - [x] **3. Move and guides.**

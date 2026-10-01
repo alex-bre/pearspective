@@ -280,7 +280,7 @@ export const useStore = create(
 
     /* ---- selection ---- */
     select: (ids) => set((s) => selectIds(s, ids)),
-    /** Shift-click: add to or remove from the selection, keeping pick order. */
+    /** Ctrl-click: add to or remove from the selection, keeping pick order. */
     toggleSelected: (id) =>
       set((s) =>
         selectIds(s, s.selection.includes(id) ? s.selection.filter((i) => i !== id) : [...s.selection, id]),

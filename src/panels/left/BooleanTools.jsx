@@ -30,7 +30,7 @@ export default function BooleanTools() {
       <Hint>
         {selection.length === 2
           ? `A = ${objects[selection[0]].name}, B = ${objects[selection[1]].name}`
-          : 'Select two objects (Shift-click) to combine them. The first one picked is A.'}
+          : 'Select two objects (Ctrl-click) to combine them. The first one picked is A.'}
       </Hint>
     </Group>
   )

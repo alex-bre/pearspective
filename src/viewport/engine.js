@@ -63,7 +63,9 @@ export function createEngine(host, { label, onZoom }) {
   const controls = new OrbitControls(camera, canvas)
   controls.enableDamping = true
   controls.dampingFactor = 0.14
-  controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN }
+  // A plain left-drag on empty space draws a selection box (input.js), so it only
+  // reaches the controls with Alt held. Middle-drag orbits; the wheel zooms.
+  controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.ROTATE, RIGHT: THREE.MOUSE.PAN }
   controls.addEventListener('start', () => (tween = null)) // the user takes over mid-flight
 
   // Rotate mode's rings. The input layer listens to its events.
@@ -378,6 +380,34 @@ export function createEngine(host, { label, onZoom }) {
   }
 
   const viewDir = () => camera.getWorldDirection(new THREE.Vector3())
+
+  /**
+   * Each object's on-screen bounds in client pixels, from its projected
+   * vertices: id → { left, top, right, bottom }. Vertices behind the camera are
+   * skipped; an object with none in front of it is left out.
+   */
+  function screenRects() {
+    const r = canvas.getBoundingClientRect()
+    const v = new THREE.Vector3()
+    const rects = new Map()
+    for (const [id, mesh] of meshes) {
+      mesh.updateMatrixWorld()
+      const pos = mesh.geometry.attributes.position
+      const b = { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity }
+      for (let i = 0; i < pos.count; i++) {
+        v.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld).project(camera)
+        if (v.z > 1) continue
+        const x = r.left + ((v.x + 1) / 2) * r.width
+        const y = r.top + ((1 - v.y) / 2) * r.height
+        b.left = Math.min(b.left, x)
+        b.right = Math.max(b.right, x)
+        b.top = Math.min(b.top, y)
+        b.bottom = Math.max(b.bottom, y)
+      }
+      if (b.left <= b.right) rects.set(id, b)
+    }
+    return rects
+  }
   const gizmoHovered = () => gizmo.object != null && gizmo.axis != null
 
   /* ---- transient feedback ---- */
@@ -533,6 +563,7 @@ export function createEngine(host, { label, onZoom }) {
     rayOnPlane,
     groundPoint,
     viewDir,
+    screenRects,
     gizmoHovered,
     showGuides,
     clearGuides,

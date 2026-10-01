@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
-import { MousePointer2, RotateCw, Box, Minus, Plus } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { MousePointer2, RotateCw, Box, Minus, Plus, Copy, Trash2 } from 'lucide-react'
 import { useStore } from '../state/store'
+import ContextMenu from '../panels/common/ContextMenu'
 import { createEngine, ZOOM_MIN, ZOOM_MAX } from './engine'
 import { attachInput } from './input'
 import styles from './Viewport.module.css'
@@ -29,8 +30,11 @@ const PROJECTIONS = [
 export default function Viewport() {
   const hostRef = useRef(null)
   const labelRef = useRef(null)
+  const marqueeRef = useRef(null)
   const engineRef = useRef(null) // for one-off camera commands: zoom and fit
   const [zoom, setZoom] = useState(100)
+  const [menu, setMenu] = useState(null) // { x, y } while the right-click menu is open
+  const closeMenu = useCallback(() => setMenu(null), []) // stable, so the menu's listeners stay put
   const mode = useStore((s) => s.ui.mode)
   const setMode = useStore((s) => s.setMode)
   const view = useStore((s) => s.ui.view)
@@ -44,7 +48,7 @@ export default function Viewport() {
     engineRef.current = engine
     engine.sync(useStore.getState())
     const unsubscribe = useStore.subscribe(engine.sync)
-    const detachInput = attachInput(hostRef.current, engine)
+    const detachInput = attachInput(hostRef.current, engine, { marquee: marqueeRef.current, onMenu: setMenu })
     return () => {
       detachInput()
       unsubscribe()
@@ -57,6 +61,8 @@ export default function Viewport() {
     <main ref={hostRef} className={styles.viewport}>
       {/* Position / size / angle readout while dragging; placed by the engine. */}
       <div ref={labelRef} className={`${styles.measure} mono`} />
+      {/* Selection box while dragging on empty space; drawn by input.js. */}
+      <div ref={marqueeRef} className={styles.marquee} />
       <div className={`${styles.floating} ${styles.modeBar} no-select`}>
         {MODES.map(({ id, label, title, Icon }) => (
           <button
@@ -123,9 +129,30 @@ export default function Viewport() {
           Fit
         </button>
       </div>
+
+      {menu && <ContextMenu x={menu.x} y={menu.y} items={MENU_ITEMS} onClose={closeMenu} />}
     </main>
   )
 }
+
+// Right-click menu on an object. It opens with that object selected, so the
+// items act on the selection.
+const MENU_ITEMS = [
+  {
+    label: 'Duplicate',
+    icon: <Copy size={14} />,
+    shortcut: 'Ctrl+D',
+    onClick: () => useStore.getState().duplicateSelected(),
+  },
+  { separator: true },
+  {
+    label: 'Delete',
+    icon: <Trash2 size={14} />,
+    shortcut: 'Del',
+    danger: true,
+    onClick: () => useStore.getState().removeSelected(),
+  },
+]
 
 /** The zoom percentage; click it to type a level. Enter or leaving the field applies, Esc cancels. */
 function ZoomField({ zoom, onSet }) {

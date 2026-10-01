@@ -163,6 +163,18 @@
   pointer-events: none;
 }
 
+/* Selection box, positioned and sized by input.js. Under the floating chrome. */
+.marquee {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 1;
+  display: none;
+  border: 1px dashed var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  pointer-events: none;
+}
+
 /* Perspective / orthographic switch under the Home button */
 .projRow {
   display: grid;

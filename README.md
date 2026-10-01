@@ -22,6 +22,7 @@
 - **Model**
   - Cube, sphere, cylinder and cone primitives — click to place, or drag onto the ground
   - Move along the ground, resize with handles, rotate with 15° snap
+  - Select several with Ctrl-click or by dragging a box
 - **Combine**
   - Boolean operations: union, subtract, and intersect
 - **Arrange**

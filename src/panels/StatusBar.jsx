@@ -5,7 +5,7 @@ import styles from './StatusBar.module.css'
 
 const HINTS = {
   select:
-    'Click to select · Drag to move · Drag a handle to resize · Shift-click to multi-select · Drag empty space to orbit · Right-drag to pan · Scroll to zoom',
+    'Click to select · Ctrl-click to add or remove · Drag empty space to box-select · Drag to move · Drag a handle to resize · Del to delete · Right-click for more · Middle- or Alt-drag to orbit · Right-drag to pan · Scroll to zoom',
   rotate: 'Drag a ring to rotate the selected object',
 }
 
