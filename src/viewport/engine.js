@@ -26,6 +26,10 @@ const VIEW_DIRS = Object.fromEntries(
   }).map(([k, v]) => [k, new THREE.Vector3(...v).normalize()]),
 )
 const FOV = 38
+// Range for a zoom level typed into the zoom bar. At 10% the camera stands at
+// ~20× the playground size, well inside the far plane (50×).
+export const ZOOM_MIN = 0.1
+export const ZOOM_MAX = 20
 const TWEEN_MS = 450
 const DEG = Math.PI / 180
 const HANDLE_PX = 9 // on-screen size of a resize handle
@@ -236,6 +240,8 @@ export function createEngine(host, { label, onZoom }) {
   }
 
   const zoomBy = (factor) => flyTo(controls.target, lookDir(), zoomLevel() * factor)
+  /** Glide to an absolute zoom level, held to ZOOM_MIN…ZOOM_MAX. */
+  const zoomTo = (zoom) => flyTo(controls.target, lookDir(), Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoom)))
 
   /** Frame the playground and every object, keeping the current direction. */
   function fit() {
@@ -533,6 +539,7 @@ export function createEngine(host, { label, onZoom }) {
     showLabel,
     hideLabel,
     zoomBy,
+    zoomTo,
     fit,
     dispose,
   }

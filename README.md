@@ -112,6 +112,16 @@ It serves plain HTTP; put a reverse proxy in front for TLS.
 
 The clause worth knowing about is §13: if you modify Pearspective and let other
 people use your version *over a network*, you have to offer those users its
-source. Self-hosting an unmodified copy carries no such obligation.
+source. Self-hosting an unmodified copy carries no such obligation. The
+practical way to comply with a public fork is a visible source link inside the
+app — which is what the About dialog already does: it links the source of the
+exact commit the build came from.
 
 The licence covers the code. It grants no rights to the Pearspective name or logo.
+
+### Bundled libraries
+
+Listed with their copyright notices in
+[THIRD-PARTY-NOTICES](THIRD-PARTY-NOTICES), which ships with the build because
+the MIT and ISC terms require it and minified output carries none. Regenerate
+after any dependency change with `npm run notices`.

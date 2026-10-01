@@ -204,6 +204,5 @@ The app runs at the end of every phase.
 - **Resizing several objects at once.** Handles appear for a single selection.
 - **Snapping objects to each other** (lulogo `objectSnap.js`). Alignment guides
   show exact matches only.
-- **Source link / About dialog.** AGPL §13 requires offering the source to
-  network users, so add it once the app is hosted and has a repo URL.
-- **Also from lulogo:** THIRD-PARTY-NOTICES, self-hosted fonts.
+- **Also from lulogo:** self-hosted fonts. Google Fonts sends every visitor's
+  IP to Google, which the About dialog's privacy policy has to disclose.

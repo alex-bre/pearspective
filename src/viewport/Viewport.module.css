@@ -113,11 +113,29 @@
 .fitBtn:hover {
   background: var(--hover);
 }
-.zoomLabel {
-  min-width: 46px;
+.zoomLabel,
+.zoomInput {
+  width: 50px;
+  height: 26px;
+  padding: 0 4px;
+  border-radius: 6px;
   text-align: center;
   font-size: 11px;
+}
+.zoomLabel {
+  border: none;
+  background: transparent;
   color: var(--text-muted);
+}
+.zoomLabel:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+.zoomInput {
+  border: 1px solid var(--accent);
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
 }
 .fitBtn {
   height: 26px;
@@ -168,7 +186,8 @@
   .panelTitle {
     display: none;
   }
-  .zoomLabel {
-    min-width: 38px;
+  .zoomLabel,
+  .zoomInput {
+    width: 40px;
   }
 }

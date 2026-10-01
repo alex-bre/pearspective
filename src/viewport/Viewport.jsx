@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { MousePointer2, RotateCw, Box, Minus, Plus } from 'lucide-react'
 import { useStore } from '../state/store'
-import { createEngine } from './engine'
+import { createEngine, ZOOM_MIN, ZOOM_MAX } from './engine'
 import { attachInput } from './input'
 import styles from './Viewport.module.css'
 
@@ -115,7 +115,7 @@ export default function Viewport() {
         <button className={styles.zoomBtn} title="Zoom out" onClick={() => engineRef.current?.zoomBy(0.8)}>
           <Minus size={14} />
         </button>
-        <span className={`${styles.zoomLabel} mono`}>{zoom}%</span>
+        <ZoomField zoom={zoom} onSet={(percent) => engineRef.current?.zoomTo(percent / 100)} />
         <button className={styles.zoomBtn} title="Zoom in" onClick={() => engineRef.current?.zoomBy(1.25)}>
           <Plus size={14} />
         </button>
@@ -124,5 +124,54 @@ export default function Viewport() {
         </button>
       </div>
     </main>
+  )
+}
+
+/** The zoom percentage; click it to type a level. Enter or leaving the field applies, Esc cancels. */
+function ZoomField({ zoom, onSet }) {
+  const [draft, setDraft] = useState(null) // the typed text while editing, else null
+  const inputRef = useRef(null)
+  const editing = draft !== null
+
+  // Focus and select the whole number when editing starts, so typing replaces it.
+  useEffect(() => {
+    if (!editing) return
+    inputRef.current?.focus()
+    inputRef.current?.select()
+  }, [editing])
+
+  if (!editing) {
+    return (
+      <button
+        className={`${styles.zoomLabel} mono`}
+        title={`Set zoom (${ZOOM_MIN * 100}–${ZOOM_MAX * 100}%)`}
+        onClick={() => setDraft(String(zoom))}
+      >
+        {zoom}%
+      </button>
+    )
+  }
+
+  const commit = () => {
+    const percent = parseFloat(draft)
+    if (Number.isFinite(percent) && percent > 0) onSet(percent)
+    setDraft(null)
+  }
+
+  return (
+    <input
+      ref={inputRef}
+      className={`${styles.zoomInput} mono`}
+      type="text"
+      inputMode="decimal"
+      aria-label="Zoom percentage"
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') e.currentTarget.blur() // blurring commits, once
+        else if (e.key === 'Escape') setDraft(null)
+      }}
+    />
   )
 }
