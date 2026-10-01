@@ -71,31 +71,31 @@ export function duplicateObject(obj, dx) {
 }
 
 /**
- * The spot nearest the origin, on grid-aligned rings, where a `size`-wide shape
- * fits inside the playground without touching any footprint. Falls back to the
- * origin when the playground is full.
+ * The spot nearest the origin, on grid-aligned rings, where a footprint of
+ * [w, d] fits inside the playground without touching any other footprint.
+ * Falls back to the origin when the playground is full.
  * ponytail: footprints ignore rotation; use rotated boxes if tight packing matters.
  */
-export function freeSpot(doc, grid, size = DEFAULT_SIZE) {
-  const step = Math.ceil((size * 1.5) / grid) * grid
-  const gap = size / 4
-  const maxX = doc.playground.w / 2 - size / 2
-  const maxZ = doc.playground.d / 2 - size / 2
+export function freeSpot(doc, grid, [w, d] = [DEFAULT_SIZE, DEFAULT_SIZE]) {
+  const stepX = Math.ceil((w * 1.5) / grid) * grid
+  const stepZ = Math.ceil((d * 1.5) / grid) * grid
+  const maxX = doc.playground.w / 2 - w / 2
+  const maxZ = doc.playground.d / 2 - d / 2
   const free = (x, z) =>
     doc.order.every((id) => {
       const o = doc.objects[id]
       return (
-        Math.abs(o.position[0] - x) >= (o.size[0] + size) / 2 + gap ||
-        Math.abs(o.position[2] - z) >= (o.size[2] + size) / 2 + gap
+        Math.abs(o.position[0] - x) >= (o.size[0] + w) / 2 + w / 4 ||
+        Math.abs(o.position[2] - z) >= (o.size[2] + d) / 2 + d / 4
       )
     })
 
-  for (let r = 0; r * step <= Math.max(maxX, maxZ); r++) {
+  for (let r = 0; r * stepX <= maxX || r * stepZ <= maxZ; r++) {
     for (let i = -r; i <= r; i++) {
       for (let j = -r; j <= r; j++) {
         if (Math.max(Math.abs(i), Math.abs(j)) !== r) continue // ring only
-        const x = i * step || 0 // no -0 from the centre ring
-        const z = j * step || 0
+        const x = i * stepX || 0 // no -0 from the centre ring
+        const z = j * stepZ || 0
         if (Math.abs(x) <= maxX && Math.abs(z) <= maxZ && free(x, z)) return [x, z]
       }
     }

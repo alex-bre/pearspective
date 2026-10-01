@@ -7,7 +7,7 @@ which has the same `src/` tree as `../infinite-canvas-editor`.
 
 Build it in lulogo's structure:
 
-- React 18 + Vite
+- React 19 + Vite
 - a zustand + immer store
 - CSS modules
 - lucide-react icons
@@ -189,10 +189,12 @@ The app runs at the end of every phase.
   - Export ▾:
     - STL: binary, mm, Z-up.
     - GLB: with colours, in meters.
-- [ ] **10. Tests and polish.**
+- [x] **10. Tests and polish.**
   - Model tests: cube − cube bounding box, normalize. (Snap, clamp, free spot,
     groundY and resize are covered already.)
   - IO test: STL round trip.
+  - Free spots take an object's width × depth, so a long import fits beside
+    another instead of on top of it.
 
 ## Deferred (not requested; add when needed)
 

@@ -226,7 +226,7 @@ export const useStore = create(
       set((s) => {
         const ids = []
         for (const m of parsed) {
-          const [x, z] = freeSpot(s.document, s.settings.grid, Math.max(m.size[0], m.size[2]))
+          const [x, z] = freeSpot(s.document, s.settings.grid, [m.size[0], m.size[2]])
           const style = { color: m.color ?? SWATCHES[6], finish: 'satin', opacity: 1 }
           const obj = meshObject(LABELS.mesh, registerGeometry(m.geometry), { position: [x, m.size[1] / 2, z], size: m.size }, style)
           obj.name = m.name

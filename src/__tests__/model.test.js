@@ -3,6 +3,7 @@ import { createObject, freeSpot } from '../model/objects'
 import { snapValue, clampToPlayground } from '../model/snap'
 import * as THREE from 'three'
 import { groundY, resizeTo, HANDLES } from '../model/transform'
+import { normalizeGeometry } from '../model/geometry'
 
 const docOf = (objs) => ({
   playground: { w: 10, d: 10 },
@@ -33,6 +34,14 @@ test('freeSpot starts at the origin, stays inside, and never overlaps', () => {
     placed.push(createObject('cube', x, z))
   }
   expect(placed[0].position).toEqual([0, 0.5, 0])
+})
+
+test('freeSpot fits a long footprint beside another along its short side', () => {
+  const long = { ...createObject('cube', 0, 0), size: [1, 1, 3] }
+  const [x, z] = freeSpot(docOf([long]), 0.5, [1, 3])
+  expect(z).toBe(0)
+  expect(Math.abs(x)).toBeGreaterThanOrEqual(1.25)
+  expect(Math.abs(x)).toBeLessThanOrEqual(4.5)
 })
 
 const cube = (over = {}) => ({ ...createObject('cube', 0, 0), ...over })
@@ -68,4 +77,19 @@ test('resizeTo works along a rotated object’s own axes', () => {
 test('resizeTo never collapses below the minimum', () => {
   const r = resizeTo(cube(), handle('corner-x-z'), new THREE.Vector3(3, 0, 3), snapped)
   expect(r.size).toEqual([0.5, 1, 0.5])
+})
+
+test('normalizeGeometry squashes into a unit box and reports where it was', () => {
+  const geo = new THREE.BoxGeometry(2, 4, 0.5).translate(1, 2, -3)
+  const { geometry, center, size } = normalizeGeometry(geo)
+  expect(center).toEqual([1, 2, -3])
+  expect(size).toEqual([2, 4, 0.5])
+  expect(geometry.boundingBox.min.toArray()).toEqual([-0.5, -0.5, -0.5])
+  expect(geometry.boundingBox.max.toArray()).toEqual([0.5, 0.5, 0.5])
+})
+
+test('normalizeGeometry survives a flat shape', () => {
+  const { geometry, size } = normalizeGeometry(new THREE.PlaneGeometry(2, 2)) // zero depth
+  expect(size[2]).toBeGreaterThan(0)
+  expect(geometry.boundingBox.max.toArray().every(Number.isFinite)).toBe(true)
 })
