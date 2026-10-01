@@ -205,5 +205,5 @@ The app runs at the end of every phase.
   show exact matches only.
 - **Source link / About dialog.** AGPL §13 requires offering the source to
   network users, so add it once the app is hosted and has a repo URL.
-- **Also from lulogo:** collapsible/responsive panels, Docker/CI/release
-  scripts, THIRD-PARTY-NOTICES, self-hosted fonts.
+- **Also from lulogo:** collapsible/responsive panels,
+  THIRD-PARTY-NOTICES, self-hosted fonts.
